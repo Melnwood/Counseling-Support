@@ -272,6 +272,12 @@
     background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 10px;width:100%}
   .fgrid input:focus,.fgrid select:focus,.fgrid textarea:focus{outline:2px solid var(--amber);outline-offset:0;border-color:var(--amber)}
   .fgrid textarea{resize:vertical}
+  .costbox{display:flex;align-items:baseline;gap:9px;background:#eef4f1;border:1px solid #cfe0da;
+    border-radius:9px;padding:8px 10px}
+  .costbox span:first-child{font-family:"Fraunces",serif;font-size:19px;color:var(--pine-deep);font-weight:500}
+  .costwhy{font-size:11.5px;color:var(--ink-soft)}
+  .fgrid label.check{flex-direction:row;align-items:center;gap:8px;font-size:13px;color:var(--ink)}
+  .fgrid label.check input{width:auto}
   .warn{font-size:13px;color:var(--u-high);background:#fbf0ee;border:1px solid #e8c0b9;
     border-radius:9px;padding:8px 11px;margin:14px 0 0}
   .sheet-foot{display:flex;align-items:center;gap:9px;margin-top:18px;flex-wrap:wrap}
@@ -384,17 +390,13 @@
         <label>Culture
           <select id="f_culture"><option value="1st">1st culture</option><option value="2nd">2nd culture</option></select>
         </label>
-        <label>Cost agreement
-          <select id="f_cost">
-            <option value="180">Agrees to pay $180</option>
-            <option value="240">Agrees to pay $240</option>
-            <option value="360">Agrees to pay $360</option>
-            <option value="480">Agrees to pay $480</option>
-            <option value="0">No cost / scholarship</option>
-          </select>
+        <label>Staff share
+          <div class="costbox"><span id="f_costview">$180</span>
+            <span class="costwhy" id="f_costwhy">Individual · 1st culture</span></div>
         </label>
         <label class="wide">Reason (short) <input id="f_reason" placeholder="e.g. burnout" /></label>
         <label class="wide">What's going on <textarea id="f_detail" rows="3"></textarea></label>
+        <label class="wide check"><input type="checkbox" id="f_nocost" /> No cost (scholarship, or a free counselor)</label>
       </div>
       <p class="warn" id="mWarn" hidden></p>
       <div class="sheet-foot">
@@ -423,7 +425,8 @@ const FIELD = {
   appStatus:"fld8wV9MjFotORTy2", statusText:"fldbQhQMy7272nfhC",
   matched:"fldSpxQ8mgzbxUlrk", transfer:"fldd3dQ2vqg3wsupF",
   submitted:"fldKD4EADERIGsoLN", yourCost:"fldpH7piGlH759TxR",
-  counselors:"fldFsMIiavyx2UYfE"
+  counselors:"fldFsMIiavyx2UYfE",
+  culture:"fldFFxDoF1wCHbUwv"
 };
 const STEPS = [
   {key:"submitted", label:"Submitted"}, {key:"approved", label:"Approved"},
@@ -436,16 +439,16 @@ const STEP_SENTENCE = [
   "Counseling underway", "Support fully in place"
 ];
 const SNAPSHOT = [
-  {recId:"recFTTj06MUCkOrxB",appNo:19,first:"Zuzi",last:"Dzubakovska",email:"zuzana.dzubakovska@tckompas.sk",type:"Individual",urgency:"High",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2024-11-15",yourCost:180,counselors:["JD Senkbile"],counselorIds:["recjarXzAtVuLSMgn"]},
-  {recId:"reca0XqjqJPi9HEtt",appNo:34,first:"Lelde",last:"Keice",email:"lkeice@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:true,transfer:false,submitted:"2025-10-06",yourCost:180,counselors:["Laura Hash","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
-  {recId:"recpO5taDCOri2eo5",appNo:36,first:"Olya",last:"Meland",email:"omeland@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2025-11-26",yourCost:0,counselors:["Laura Hash","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
-  {recId:"recLwG59qQQvpbX2P",appNo:37,first:"Ion",last:"Matei",email:"imatei@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2025-12-02",yourCost:0,counselors:["Laura Hash","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
-  {recId:"reclFTdEYvpUawZzY",appNo:43,first:"Johnny",last:"Stevens",email:"jstevens@josiahventure.com",type:"Spiritual Direction",urgency:"Low",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2026-01-29",yourCost:0,counselors:["Joe Brooks","Bartek Tesluk","Laura Hash","Sharon Mormance","Brenda Nickerson","JD Senkbile","Audrey Chestnut"],counselorIds:["rec402Idp0iJ3HjYd","rec7gXGekt2IbHEGC","recEnIVnL6iwNxczT","recGOXqsVfcIEIaAR","rechskvSyWYaMXvrU","recjarXzAtVuLSMgn","recxckOhlIqCbmDDN"]},
-  {recId:"rechY8Fo4H29ydEp6",appNo:45,first:"Casey",last:"Yorman",email:"cyorman@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2026-03-03",yourCost:360,counselors:["Laura Hash","Filip Ologeanu","Wilma Piek","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recI6roBarj6nDB0l","recSt0weuGddLevx9","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
-  {recId:"recTjw0fH7DH5c78s",appNo:46,first:"Doroteja",last:"Kolar",email:"dkolar@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2026-03-03",yourCost:180,counselors:["Laura Hash","Filip Ologeanu","Wilma Piek","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recI6roBarj6nDB0l","recSt0weuGddLevx9","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
-  {recId:"reckyeBB7ChJCKptm",appNo:47,first:"Henryk",last:"Molin",email:"hmolin@josiahventure.com",type:"Marriage",urgency:"Low",appStatus:"Submitted",statusText:"Application status is Submitted",matched:false,transfer:false,submitted:"2026-03-17",yourCost:240,counselors:["Laura Hash","Filip Ologeanu","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recI6roBarj6nDB0l","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
-  {recId:"recQwQWLZTkGkIZqG",appNo:52,first:"Trisha",last:"Wynn",email:"twynn@josiahventure.com",type:"Individual",urgency:"High",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2026-07-06",yourCost:360,counselors:["Laura Hash","Filip Ologeanu","Wilma Piek","Doug Feil","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recI6roBarj6nDB0l","recSt0weuGddLevx9","receQD0l2Wr3SweFB","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
-  {recId:"rec1DdoHRre2FPREm",appNo:53,first:"Laura",last:"Hash",email:"lhash@josiahventure.com",type:"Individual",urgency:"Low",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2026-07-08",yourCost:0,counselors:["Laura Hash","Filip Ologeanu","Fiona Beckford","Wilma Piek","Doug Feil","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recI6roBarj6nDB0l","recSl252wG1WXuC5v","recSt0weuGddLevx9","receQD0l2Wr3SweFB","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]}
+  {recId:"recFTTj06MUCkOrxB",appNo:19,first:"Zuzi",last:"Dzubakovska",email:"zuzana.dzubakovska@tckompas.sk",culture:"1st",type:"Individual",urgency:"High",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2024-11-15",yourCost:180,counselors:["JD Senkbile"],counselorIds:["recjarXzAtVuLSMgn"]},
+  {recId:"reca0XqjqJPi9HEtt",appNo:34,first:"Lelde",last:"Keice",email:"lkeice@josiahventure.com",culture:"1st",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:true,transfer:false,submitted:"2025-10-06",yourCost:180,counselors:["Laura Hash","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
+  {recId:"recpO5taDCOri2eo5",appNo:36,first:"Olya",last:"Meland",email:"omeland@josiahventure.com",culture:"1st",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2025-11-26",yourCost:0,counselors:["Laura Hash","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
+  {recId:"recLwG59qQQvpbX2P",appNo:37,first:"Ion",last:"Matei",email:"imatei@josiahventure.com",culture:"1st",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2025-12-02",yourCost:0,counselors:["Laura Hash","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
+  {recId:"reclFTdEYvpUawZzY",appNo:43,first:"Johnny",last:"Stevens",email:"jstevens@josiahventure.com",culture:"1st",type:"Spiritual Direction",urgency:"Low",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2026-01-29",yourCost:0,counselors:["Joe Brooks","Bartek Tesluk","Laura Hash","Sharon Mormance","Brenda Nickerson","JD Senkbile","Audrey Chestnut"],counselorIds:["rec402Idp0iJ3HjYd","rec7gXGekt2IbHEGC","recEnIVnL6iwNxczT","recGOXqsVfcIEIaAR","rechskvSyWYaMXvrU","recjarXzAtVuLSMgn","recxckOhlIqCbmDDN"]},
+  {recId:"rechY8Fo4H29ydEp6",appNo:45,first:"Casey",last:"Yorman",email:"cyorman@josiahventure.com",culture:"2nd",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2026-03-03",yourCost:360,counselors:["Laura Hash","Filip Ologeanu","Wilma Piek","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recI6roBarj6nDB0l","recSt0weuGddLevx9","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
+  {recId:"recTjw0fH7DH5c78s",appNo:46,first:"Doroteja",last:"Kolar",email:"dkolar@josiahventure.com",culture:"1st",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2026-03-03",yourCost:180,counselors:["Laura Hash","Filip Ologeanu","Wilma Piek","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recI6roBarj6nDB0l","recSt0weuGddLevx9","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
+  {recId:"reckyeBB7ChJCKptm",appNo:47,first:"Henryk",last:"Molin",email:"hmolin@josiahventure.com",culture:"1st",type:"Marriage",urgency:"Low",appStatus:"Submitted",statusText:"Application status is Submitted",matched:false,transfer:false,submitted:"2026-03-17",yourCost:240,counselors:["Laura Hash","Filip Ologeanu","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recI6roBarj6nDB0l","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
+  {recId:"recQwQWLZTkGkIZqG",appNo:52,first:"Trisha",last:"Wynn",email:"twynn@josiahventure.com",culture:"2nd",type:"Individual",urgency:"High",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2026-07-06",yourCost:360,counselors:["Laura Hash","Filip Ologeanu","Wilma Piek","Doug Feil","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recI6roBarj6nDB0l","recSt0weuGddLevx9","receQD0l2Wr3SweFB","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
+  {recId:"rec1DdoHRre2FPREm",appNo:53,first:"Laura",last:"Hash",email:"lhash@josiahventure.com",culture:"2nd",type:"Individual",urgency:"Low",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2026-07-08",yourCost:0,counselors:["Laura Hash","Filip Ologeanu","Fiona Beckford","Wilma Piek","Doug Feil","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recI6roBarj6nDB0l","recSl252wG1WXuC5v","recSt0weuGddLevx9","receQD0l2Wr3SweFB","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]}
 ];
 
 /* ---------- logic ---------- */
@@ -475,6 +478,7 @@ function mapAirtableRecord(r){
     appStatus: sel(f[FIELD.appStatus])||"", statusText: f[FIELD.statusText]||"",
     matched: sel(f[FIELD.matched])==="Yes", transfer: !!f[FIELD.transfer],
     submitted: f[FIELD.submitted]||"", yourCost: f[FIELD.yourCost]||0,
+    culture: sel(f[FIELD.culture])||"1st",
     counselors: Array.isArray(list) ? list.map(v=> (v&&v.name) ? v.name : v) : [],
     counselorIds: Array.isArray(list) ? list.map(v=> (v&&v.id) ? v.id : null).filter(Boolean) : []
   };
@@ -492,22 +496,22 @@ const FOCUS = {
 /* counselor specialties + who they see — fallback for snapshot/preview.
    Live mode overwrites this from the proxy so Airtable edits win. */
 const COUNSELOR_META = {
-  "Joe Brooks":      {id:"rec402Idp0iJ3HjYd", types:["Spiritual Direction"], serves:["Men","Women"]},
-  "Bartek Tesluk":   {id:"rec7gXGekt2IbHEGC", types:["Spiritual Direction"], serves:["Men"]},
-  "Laura Hash":      {id:"recEnIVnL6iwNxczT", types:["Individual","Marriage","Spiritual Direction"], serves:["Men","Women"]},
-  "Sharon Mormance": {id:"recGOXqsVfcIEIaAR", types:["Spiritual Direction"], serves:["Women"]},
+  "Joe Brooks":      {id:"rec402Idp0iJ3HjYd", types:["Spiritual Direction"], serves:["Men","Women"], free:true},
+  "Bartek Tesluk":   {id:"rec7gXGekt2IbHEGC", types:["Spiritual Direction"], serves:["Men"], free:true},
+  "Laura Hash":      {id:"recEnIVnL6iwNxczT", types:["Individual","Marriage","Spiritual Direction"], serves:["Men","Women"], free:true},
+  "Sharon Mormance": {id:"recGOXqsVfcIEIaAR", types:["Spiritual Direction"], serves:["Women"], free:true},
   "Filip Ologeanu":  {id:"recI6roBarj6nDB0l", types:["Individual","Marriage"], serves:["Men","Women"]},
-  "David Bordner":   {id:"recKHo3tIouJ3wskI", types:["Spiritual Direction"], serves:[]},
+  "David Bordner":   {id:"recKHo3tIouJ3wskI", types:["Spiritual Direction"], serves:[], free:true},
   "Fiona Beckford":  {id:"recSl252wG1WXuC5v", types:["Individual","Marriage"], serves:["Men","Women"]},
   "Wilma Piek":      {id:"recSt0weuGddLevx9", types:["Individual"], serves:["Men","Women"]},
   "Doug Feil":       {id:"receQD0l2Wr3SweFB", types:["Individual"], serves:["Men","Women"]},
-  "Brenda Nickerson":{id:"rechskvSyWYaMXvrU", types:["Spiritual Direction"], serves:["Women"]},
+  "Brenda Nickerson":{id:"rechskvSyWYaMXvrU", types:["Spiritual Direction"], serves:["Women"], free:true},
   "JD Senkbile":     {id:"recjarXzAtVuLSMgn", types:["Individual","Marriage","Spiritual Direction"], serves:["Men","Women"]},
-  "Dan Hash":        {id:"recufKvW6uSaFM8yu", types:["Individual","Marriage"], serves:["Men","Women"]},
-  "Audrey Chestnut": {id:"recxckOhlIqCbmDDN", types:["Spiritual Direction"], serves:["Men","Women"]}
+  "Dan Hash":        {id:"recufKvW6uSaFM8yu", types:["Individual","Marriage"], serves:["Men","Women"], free:true},
+  "Audrey Chestnut": {id:"recxckOhlIqCbmDDN", types:["Spiritual Direction"], serves:["Men","Women"], free:true}
 };
 let CMETA = {...COUNSELOR_META};
-function buildMeta(list){ const m={}; (list||[]).forEach(c=>{ if(c&&c.name) m[c.name]={id:c.id,types:c.types||[],serves:c.serves||[]}; }); return m; }
+function buildMeta(list){ const m={}; (list||[]).forEach(c=>{ if(c&&c.name) m[c.name]={id:c.id,types:c.types||[],serves:c.serves||[],free:!!c.free}; }); return m; }
 function metaFor(n){ return CMETA[n] || null; }
 /* Who can actually take this request, right now.
    The list stored on the application is a snapshot from intake and goes stale
@@ -515,7 +519,7 @@ function metaFor(n){ return CMETA[n] || null; }
 function eligibleFor(type){
   return Object.entries(CMETA)
     .filter(([,m]) => (m.types||[]).includes(type) && m.id)
-    .map(([name,m]) => ({ id:m.id, name, types:m.types||[], serves:m.serves||[] }))
+    .map(([name,m]) => ({ id:m.id, name, types:m.types||[], serves:m.serves||[], free:!!m.free }))
     .sort((a,b)=> a.name.localeCompare(b.name));
 }
 function servesText(a){ const s=(a||[]).map(x=>String(x).toLowerCase());
@@ -841,18 +845,17 @@ function approveHTML(p){
   }
   if(!list.length) return "";
 
+  const tier = deriveTier(p.type, p.culture) ?? p.yourCost ?? 0;
   const opts = list.map(c=>{
-    // lead with the type they were asked for, then their other specialties
-    const others = c.types.filter(t=>t!==p.type);
-    const spec = c.types.length ? [p.type, ...others].join(", ") : "";
+    const cost = c.free ? "free" : `$${tier}`;      // the $0 flag decides
     const sv = servesText(c.serves);
-    const bits = [spec, sv].filter(Boolean).join(" · ");
-    return `<option value="${esc(c.id)}">${esc(c.name)}${bits?` — ${esc(bits)}`:""}</option>`;
+    const bits = [cost, sv].filter(Boolean).join(" · ");
+    return `<option value="${esc(c.id)}">${esc(c.name)} — ${esc(bits)}</option>`;
   }).join("");
 
   const note = LIVE
     ? `${list.length} counselor${list.length===1?"":"s"} qualified for <b>${esc(p.type)}</b>.
-       On approval, Airtable emails <b>that counselor only</b>.`
+       Cost depends on who you pick. On approval, Airtable emails <b>that counselor only</b>.`
     : `Preview — deploy to enable. Live, this picks from the ${list.length} counselor${list.length===1?"":"s"}
        qualified for <b>${esc(p.type)}</b> and emails <b>that counselor only</b>.`;
 
@@ -902,6 +905,26 @@ function openModal(){
   document.getElementById("f_first").focus();
 }
 function closeModal(){ document.getElementById("appModal").hidden = true; }
+
+/* Staff share follows counseling type + culture. 1st culture pays the lower
+   rate, 2nd the higher. Spiritual direction is charged at the Individual rate.
+   This is what they agree to pay IF their counselor charges — several counselors
+   are free, and that drops it to $0 at approval. */
+function deriveTier(type, culture){
+  const second = culture==="2nd";
+  if(type==="Marriage") return second ? 480 : 240;
+  if(type==="Individual" || type==="Spiritual Direction") return second ? 360 : 180;
+  return null;
+}
+function refreshCost(){
+  const type = document.getElementById("f_type").value;
+  const culture = document.getElementById("f_culture").value;
+  const free = document.getElementById("f_nocost").checked;
+  const amt = free ? 0 : deriveTier(type, culture);
+  document.getElementById("f_costview").textContent = `$${amt ?? 0}`;
+  document.getElementById("f_costwhy").textContent =
+    free ? "no cost" : `${type} · ${culture==="2nd"?"2nd":"1st"} culture`;
+}
 async function submitApp(){
   const btn = document.getElementById("mSubmit");
   const warn = document.getElementById("mWarn");
@@ -963,6 +986,9 @@ function init(){
   document.getElementById("mClose").onclick = closeModal;
   document.getElementById("mCancel").onclick = closeModal;
   document.getElementById("mSubmit").onclick = submitApp;
+  ["f_type","f_culture","f_nocost"].forEach(id=>
+    document.getElementById(id).addEventListener("change", refreshCost));
+  refreshCost();
   document.getElementById("appModal").addEventListener("click", e=>{
     if(e.target.id==="appModal") closeModal();
   });

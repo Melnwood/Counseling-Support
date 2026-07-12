@@ -20,6 +20,7 @@ const COUNSELOR_LINK_FIELD  = "fldFsMIiavyx2UYfE";         // Applications -> Co
 const COUNSELOR_NAME_FIELD  = "fldzeTvZO3un9aL4V";         // Counselors full-name field
 const COUNSELOR_TYPES_FIELD = "flduetAMDeeL7u2Ts";         // Individual / Marriage / Spiritual Direction
 const COUNSELOR_SERVES_FIELD= "flda0OIWKkZqgkx7o";         // Men / Women
+const COUNSELOR_FREE_FIELD  = "fldKrdoLdkchg6841";         // "$0 Cost" — checked means this counselor is free
 
 const APP_FIELDS = [
   "fldxMDtlRzzEglkYn", // First Name
@@ -33,7 +34,8 @@ const APP_FIELDS = [
   "fldSpxQ8mgzbxUlrk", // Counselor matched (Yes/No)
   "fldd3dQ2vqg3wsupF", // Transfer Has Been Made
   "fldKD4EADERIGsoLN", // Submitted date
-  "fldpH7piGlH759TxR", // Your Cost
+  "fldpH7piGlH759TxR", // Amount to withdraw from staff account
+  "fldFFxDoF1wCHbUwv", // Culture (1st / 2nd)
   COUNSELOR_LINK_FIELD
 ];
 
@@ -66,7 +68,8 @@ exports.handler = async () => {
     const counselors = await fetchAll(COUNSELORS_TABLE, [
       ["fields[]", COUNSELOR_NAME_FIELD],
       ["fields[]", COUNSELOR_TYPES_FIELD],
-      ["fields[]", COUNSELOR_SERVES_FIELD]
+      ["fields[]", COUNSELOR_SERVES_FIELD],
+      ["fields[]", COUNSELOR_FREE_FIELD]
     ]);
     const nameById = {};
     const counselorMeta = [];
@@ -77,7 +80,8 @@ exports.handler = async () => {
         id: c.id,
         name: nm,
         types: c.fields[COUNSELOR_TYPES_FIELD] || [],
-        serves: c.fields[COUNSELOR_SERVES_FIELD] || []
+        serves: c.fields[COUNSELOR_SERVES_FIELD] || [],
+        free: !!c.fields[COUNSELOR_FREE_FIELD]
       });
     });
 
