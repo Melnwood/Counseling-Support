@@ -328,7 +328,6 @@
 
     <div class="controls">
       <div class="grp" id="typeFilters"></div>
-      <div class="grp"><button class="chip" id="attnToggle" aria-pressed="false">Needs attention now</button></div>
       <span class="count" id="visCount"></span>
     </div>
 
@@ -524,7 +523,7 @@ function groupKeyFor(p){
 
 let DATA = [];
 let LIVE = false;
-let state = { type:"All", attn:false, focus:"all" };
+let state = { type:"All", focus:"all" };
 let cstate = { type:null, showIdle:false };
 function isAwaitingApproval(p){ return p.appStatus==="Submitted"; }
 function fmtDate(iso){ if(!iso) return "—";
@@ -551,7 +550,7 @@ function renderSummary(){
 }
 function setFocus(key){
   state.focus = (state.focus===key && key!=="all") ? "all" : key;
-  state.type = "All"; state.attn = false;               // clean drill-down
+  state.type = "All";                                   // clean drill-down
   renderSummary(); renderControls(); renderRoster();
   const bar = document.getElementById("focusBar");
   if(state.focus!=="all"){
@@ -574,9 +573,6 @@ function renderControls(){
       document.querySelectorAll("[data-type]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.type===state.type));
       renderRoster(); };
   });
-  const at = document.getElementById("attnToggle");
-  at.setAttribute("aria-pressed", state.attn);
-  at.onclick = ()=>{ state.attn=!state.attn; at.setAttribute("aria-pressed",state.attn); renderRoster(); };
 }
 function stepperHTML(cur){
   return `<div class="vtrack">` + STEPS.map((s,i)=>{
@@ -598,7 +594,6 @@ function counselorTag(p){
 function renderRoster(){
   let rows = DATA.filter(FOCUS[state.focus].test);
   if(state.type!=="All") rows = rows.filter(p=>p.type===state.type);
-  if(state.attn) rows = rows.filter(p=>isAwaitingApproval(p) || (p.urgency==="High" && stepIndexFor(p).idx<3));
 
   const urgRank = {High:0, Medium:1, Low:2};
   const sortRows = a => a.sort((x,y)=>
