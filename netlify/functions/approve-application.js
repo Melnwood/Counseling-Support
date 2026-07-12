@@ -65,7 +65,7 @@ exports.handler = async (event) => {
   try {
     // Read the application so names/type come from Airtable, not the browser.
     const appRes = await fetch(
-      `https://api.airtable.com/v0/${BASE}/${APPLICATIONS_TABLE}/${applicationId}`,
+      `https://api.airtable.com/v0/${BASE}/${APPLICATIONS_TABLE}/${applicationId}?returnFieldsByFieldId=true`,
       { headers: { Authorization: `Bearer ${TOKEN}` } }
     );
     if (!appRes.ok) return respond(404, { error: "Application not found" });

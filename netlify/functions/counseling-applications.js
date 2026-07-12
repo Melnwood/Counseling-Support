@@ -40,6 +40,8 @@ const APP_FIELDS = [
 async function at(path, params) {
   const url = new URL(`https://api.airtable.com/v0/${BASE}/${encodeURIComponent(path)}`);
   (params || []).forEach(([k, v]) => url.searchParams.append(k, v));
+  // Airtable keys fields BY NAME unless this is set — we read by field ID.
+  url.searchParams.set("returnFieldsByFieldId", "true");
   const r = await fetch(url, { headers: { Authorization: `Bearer ${TOKEN}` } });
   if (!r.ok) throw new Error(`Airtable ${path} ${r.status}: ${await r.text()}`);
   return r.json();

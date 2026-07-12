@@ -227,6 +227,8 @@
     border:1px solid #E4BDD0;border-radius:9px;padding:8px 10px}
   .ap-sel:focus{outline:2px solid #B03A6E;border-color:#B03A6E}
   .approve .btn.go{background:#B03A6E;border-color:#B03A6E}
+  .approve .btn.go:disabled,.ap-sel:disabled{opacity:.55;cursor:not-allowed}
+  .approve .btn.go:disabled:hover{background:#B03A6E}
   .approve .btn.go:hover{background:#94305C}
   .ap-msg{font-size:12.5px;margin:10px 0 0;padding:7px 10px;border-radius:8px}
   .ap-msg.ok{color:var(--pine-deep);background:#eef4f1;border:1px solid #cfe0da}
@@ -407,16 +409,16 @@ const STEP_SENTENCE = [
   "Counseling underway", "Support fully in place"
 ];
 const SNAPSHOT = [
-  {appNo:19,first:"Zuzi",last:"Dzubakovska",email:"zuzana.dzubakovska@tckompas.sk",type:"Individual",urgency:"High",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2024-11-15",yourCost:180,counselors:["JD Senkbile"]},
-  {appNo:34,first:"Lelde",last:"Keice",email:"lkeice@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:true,transfer:false,submitted:"2025-10-06",yourCost:180,counselors:["Laura Hash","JD Senkbile","Dan Hash"]},
-  {appNo:36,first:"Olya",last:"Meland",email:"omeland@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2025-11-26",yourCost:0,counselors:["Laura Hash","JD Senkbile","Dan Hash"]},
-  {appNo:37,first:"Ion",last:"Matei",email:"imatei@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2025-12-02",yourCost:0,counselors:["Laura Hash","JD Senkbile","Dan Hash"]},
-  {appNo:43,first:"Johnny",last:"Stevens",email:"jstevens@josiahventure.com",type:"Spiritual Direction",urgency:"Low",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2026-01-29",yourCost:0,counselors:["Joe Brooks","Bartek Tesluk","Laura Hash","Sharon Mormance","Brenda Nickerson","JD Senkbile","Audrey Chestnut"]},
-  {appNo:45,first:"Casey",last:"Yorman",email:"cyorman@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2026-03-03",yourCost:360,counselors:["Laura Hash","Filip Ologeanu","Wilma Piek","JD Senkbile","Dan Hash"]},
-  {appNo:46,first:"Doroteja",last:"Kolar",email:"dkolar@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2026-03-03",yourCost:180,counselors:["Laura Hash","Filip Ologeanu","Wilma Piek","JD Senkbile","Dan Hash"]},
-  {appNo:47,first:"Henryk",last:"Molin",email:"hmolin@josiahventure.com",type:"Marriage",urgency:"Low",appStatus:"Submitted",statusText:"Application status is Submitted",matched:false,transfer:false,submitted:"2026-03-17",yourCost:240,counselors:["Laura Hash","Filip Ologeanu","JD Senkbile","Dan Hash"]},
-  {appNo:52,first:"Trisha",last:"Wynn",email:"twynn@josiahventure.com",type:"Individual",urgency:"High",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2026-07-06",yourCost:360,counselors:["Laura Hash","Filip Ologeanu","Wilma Piek","Doug Feil","JD Senkbile","Dan Hash"]},
-  {appNo:53,first:"Laura",last:"Hash",email:"lhash@josiahventure.com",type:"Individual",urgency:"Low",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2026-07-08",yourCost:0,counselors:["Laura Hash","Filip Ologeanu","Fiona Beckford","Wilma Piek","Doug Feil","JD Senkbile","Dan Hash"]}
+  {recId:"recFTTj06MUCkOrxB",appNo:19,first:"Zuzi",last:"Dzubakovska",email:"zuzana.dzubakovska@tckompas.sk",type:"Individual",urgency:"High",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2024-11-15",yourCost:180,counselors:["JD Senkbile"],counselorIds:["recjarXzAtVuLSMgn"]},
+  {recId:"reca0XqjqJPi9HEtt",appNo:34,first:"Lelde",last:"Keice",email:"lkeice@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:true,transfer:false,submitted:"2025-10-06",yourCost:180,counselors:["Laura Hash","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
+  {recId:"recpO5taDCOri2eo5",appNo:36,first:"Olya",last:"Meland",email:"omeland@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2025-11-26",yourCost:0,counselors:["Laura Hash","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
+  {recId:"recLwG59qQQvpbX2P",appNo:37,first:"Ion",last:"Matei",email:"imatei@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2025-12-02",yourCost:0,counselors:["Laura Hash","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
+  {recId:"reclFTdEYvpUawZzY",appNo:43,first:"Johnny",last:"Stevens",email:"jstevens@josiahventure.com",type:"Spiritual Direction",urgency:"Low",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2026-01-29",yourCost:0,counselors:["Joe Brooks","Bartek Tesluk","Laura Hash","Sharon Mormance","Brenda Nickerson","JD Senkbile","Audrey Chestnut"],counselorIds:["rec402Idp0iJ3HjYd","rec7gXGekt2IbHEGC","recEnIVnL6iwNxczT","recGOXqsVfcIEIaAR","rechskvSyWYaMXvrU","recjarXzAtVuLSMgn","recxckOhlIqCbmDDN"]},
+  {recId:"rechY8Fo4H29ydEp6",appNo:45,first:"Casey",last:"Yorman",email:"cyorman@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2026-03-03",yourCost:360,counselors:["Laura Hash","Filip Ologeanu","Wilma Piek","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recI6roBarj6nDB0l","recSt0weuGddLevx9","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
+  {recId:"recTjw0fH7DH5c78s",appNo:46,first:"Doroteja",last:"Kolar",email:"dkolar@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2026-03-03",yourCost:180,counselors:["Laura Hash","Filip Ologeanu","Wilma Piek","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recI6roBarj6nDB0l","recSt0weuGddLevx9","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
+  {recId:"reckyeBB7ChJCKptm",appNo:47,first:"Henryk",last:"Molin",email:"hmolin@josiahventure.com",type:"Marriage",urgency:"Low",appStatus:"Submitted",statusText:"Application status is Submitted",matched:false,transfer:false,submitted:"2026-03-17",yourCost:240,counselors:["Laura Hash","Filip Ologeanu","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recI6roBarj6nDB0l","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
+  {recId:"recQwQWLZTkGkIZqG",appNo:52,first:"Trisha",last:"Wynn",email:"twynn@josiahventure.com",type:"Individual",urgency:"High",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2026-07-06",yourCost:360,counselors:["Laura Hash","Filip Ologeanu","Wilma Piek","Doug Feil","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recI6roBarj6nDB0l","recSt0weuGddLevx9","receQD0l2Wr3SweFB","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]},
+  {recId:"rec1DdoHRre2FPREm",appNo:53,first:"Laura",last:"Hash",email:"lhash@josiahventure.com",type:"Individual",urgency:"Low",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2026-07-08",yourCost:0,counselors:["Laura Hash","Filip Ologeanu","Fiona Beckford","Wilma Piek","Doug Feil","JD Senkbile","Dan Hash"],counselorIds:["recEnIVnL6iwNxczT","recI6roBarj6nDB0l","recSl252wG1WXuC5v","recSt0weuGddLevx9","receQD0l2Wr3SweFB","recjarXzAtVuLSMgn","recufKvW6uSaFM8yu"]}
 ];
 
 /* ---------- logic ---------- */
@@ -499,6 +501,7 @@ function groupKeyFor(p){
 }
 
 let DATA = [];
+let LIVE = false;
 let state = { type:"All", attn:false, focus:"all" };
 let cstate = { type:null, showIdle:false };
 function isAwaitingApproval(p){ return p.appStatus==="Submitted"; }
@@ -752,22 +755,24 @@ const APPROVE_URL = "/.netlify/functions/approve-application";
 
 function approveHTML(p){
   if(!isAwaitingApproval(p)) return "";
-  if(!p.recId || !p.counselorIds?.length){
-    return `<div class="approve"><p class="ap-note">Approval runs against live Airtable — connect the proxy to enable it.</p></div>`;
-  }
+  if(!p.recId || !p.counselorIds?.length) return "";
   const opts = p.counselorIds.map((id,i)=>{
     const nm = p.counselors[i] || id;
     const m = metaFor(nm);
     const sv = m ? servesText(m.serves) : "";
     return `<option value="${esc(id)}">${esc(nm)}${sv?` — serves ${esc(sv)}`:""}</option>`;
   }).join("");
+  const note = LIVE
+    ? `Picks one counselor from the ${p.counselorIds.length} eligible for ${esc(p.type)}.
+       On approval, Airtable emails <b>that counselor only</b>.`
+    : `Preview — deploy with the Airtable token to enable. Live, this picks one of the
+       ${p.counselorIds.length} counselors eligible for ${esc(p.type)} and emails <b>that counselor only</b>.`;
   return `<div class="approve" data-app="${esc(p.recId)}">
     <div class="ap-head">Approve &amp; assign a counselor</div>
-    <p class="ap-note">Picks one counselor from the ${p.counselorIds.length} eligible for ${esc(p.type)}.
-      On approval, Airtable emails <b>that counselor only</b>.</p>
+    <p class="ap-note">${note}</p>
     <div class="ap-row">
-      <select class="ap-sel" aria-label="Counselor">${opts}</select>
-      <button class="btn go ap-go">Approve</button>
+      <select class="ap-sel" aria-label="Counselor" ${LIVE?"":"disabled"}>${opts}</select>
+      <button class="btn go ap-go" ${LIVE?"":"disabled"}>Approve</button>
     </div>
     <p class="ap-msg" hidden></p>
   </div>`;
@@ -854,9 +859,11 @@ async function loadLive(){
     const json = await res.json();
     DATA = (json.records||json).map(mapAirtableRecord).filter(p=>p.appNo!=null);
     if(json.counselors) CMETA = {...COUNSELOR_META, ...buildMeta(json.counselors)};
+    LIVE = true;
     document.getElementById("dataMode").textContent = "Live from Airtable";
     paintAll();
   }catch(e){
+    LIVE = false;
     document.getElementById("dataMode").textContent = "Preview · showing last snapshot";
     DATA = SNAPSHOT.slice(); paintAll();
   }finally{ btn.dataset.busy = ""; }
