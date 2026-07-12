@@ -217,6 +217,22 @@
   footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;
     color:var(--ink-soft);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
   [hidden]{display:none!important}
+  /* new-application alert */
+  .newbar{display:flex;align-items:center;gap:10px;margin:22px 0 0;padding:12px 15px;
+    border-radius:12px;background:#FBEDF3;border:1px solid #F0CFDE;flex-wrap:wrap}
+  .nb-dot{width:9px;height:9px;border-radius:50%;background:#B03A6E;flex:none;
+    box-shadow:0 0 0 4px rgba(176,58,110,.15)}
+  .nb-text{font-size:13.5px;color:#8E5573;flex:1;min-width:180px}
+  .nb-text b{color:#B03A6E;font-weight:600}
+  .nb-when{color:#A8778D;font-size:12.5px}
+  .nb-sep{color:#DDB9CB;margin:0 7px}
+  .nb-go{font:inherit;font-size:12.5px;padding:6px 13px;border-radius:999px;cursor:pointer}
+  .nb-go{background:#B03A6E;color:#fff;border:1px solid #B03A6E;font-weight:600}
+  .nb-go:hover{background:#94305C}
+  .pill-new{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:#fff;background:#B03A6E;border-radius:999px;padding:2px 7px;margin-left:8px;
+    vertical-align:middle}
+  .person.is-new{box-shadow:var(--shadow), 0 0 0 2px #F0CFDE}
   /* approve panel */
   .approve{margin-top:18px;padding:14px 15px;border-radius:12px;
     background:#FBEDF3;border:1px solid #F0CFDE}
@@ -289,6 +305,12 @@
       <button class="refresh" id="refreshBtn" hidden>↻ Refresh from Airtable</button>
     </div>
   </header>
+
+  <div class="newbar" id="newBar" hidden>
+    <span class="nb-dot"></span>
+    <span class="nb-text" id="nbText"></span>
+    <button class="nb-go" id="nbView">Review</button>
+  </div>
 
   <div class="tabs" role="tablist">
     <button class="tab" id="tab-journey" role="tab" aria-selected="true">Care journey</button>
@@ -591,10 +613,11 @@ function renderRoster(){
     const sentence = denied ? "Application not moving forward" : STEP_SENTENCE[idx];
     const cost = p.yourCost>0 ? `$${p.yourCost} member share` : "No member share";
     const did = `det-${p.appNo}`;
-    return `<article class="person u-${esc(p.urgency)}">
+    const fresh = isNew(p);
+    return `<article class="person u-${esc(p.urgency)} ${fresh?"is-new":""}">
       <button class="p-summary" aria-expanded="false" aria-controls="${did}">
         <span class="udot ${esc(p.urgency)}" title="${esc(p.urgency)} urgency"></span>
-        <span class="p-sum-name">${esc(p.first)} ${esc(p.last)}<span class="app">#${p.appNo}</span></span>
+        <span class="p-sum-name">${esc(p.first)} ${esc(p.last)}<span class="app">#${p.appNo}</span>${fresh?`<span class="pill-new">New</span>`:""}</span>
         <span class="p-sum-date">Applied ${fmtDate(p.submitted)}</span>
         <span class="chev" aria-hidden="true">›</span>
       </button>
@@ -750,6 +773,50 @@ function switchView(name){
   if(!journey) renderCounselors();
 }
 
+/* ---------- "new since you last looked" ----------
+   Anchored to the Application # (an autonumber, so it only ever climbs).
+   We remember the highest one you've seen; anything above it is new.
+   First ever visit sets the baseline, so you don't get 10 false alarms. */
+const SEEN_KEY = "ccj:lastSeenAppNo";
+function getSeen(){
+  try{ const v = localStorage.getItem(SEEN_KEY); return v===null ? null : Number(v); }
+  catch{ return null; }
+}
+function setSeen(n){ try{ localStorage.setItem(SEEN_KEY, String(n)); }catch{} }
+const maxAppNo = () => DATA.reduce((m,p)=> Math.max(m, p.appNo||0), 0);
+function isNew(p){
+  const seen = getSeen();
+  return seen !== null && p.appNo > seen;
+}
+function newOnes(){ return DATA.filter(isNew).sort((a,b)=>b.appNo-a.appNo); }
+
+function renderNewBar(){
+  const bar = document.getElementById("newBar");
+  const list = newOnes();
+  if(!list.length){ bar.hidden = true; return; }
+  // each new person, with the date they applied
+  const who = list.slice(0,3)
+    .map(p=>`${esc(p.first)} ${esc(p.last)} <span class="nb-when">— applied ${fmtDate(p.submitted)}</span>`)
+    .join('<span class="nb-sep">·</span>');
+  const extra = list.length>3 ? `<span class="nb-sep">·</span>+${list.length-3} more` : "";
+  document.getElementById("nbText").innerHTML =
+    `<b>${list.length} new application${list.length===1?"":"s"}</b> since you last looked${list.length===1?" — ":": "}${who}${extra}`;
+  bar.hidden = false;
+}
+function viewNew(){
+  const list = newOnes();
+  if(!list.length) return;
+  switchView("journey");
+  setFocus("all");
+  const el = document.querySelector(`[aria-controls="det-${list[0].appNo}"]`);
+  if(el){
+    if(el.getAttribute("aria-expanded")!=="true") el.click();
+    el.scrollIntoView({behavior: reduceMotion?"auto":"smooth", block:"center"});
+  }
+  setSeen(maxAppNo());   // reviewing them counts as seeing them
+  renderNewBar();        // banner clears; row badges stay until next load
+}
+
 /* ---------- director approval ---------- */
 const APPROVE_URL = "/.netlify/functions/approve-application";
 
@@ -845,7 +912,8 @@ async function submitApp(){
 
 /* ---------- boot ---------- */
 function paintAll(){
-  renderSummary(); renderLegend(); renderControls(); renderRoster();
+  if(getSeen()===null && DATA.length) setSeen(maxAppNo());   // baseline on first visit
+  renderSummary(); renderLegend(); renderControls(); renderNewBar(); renderRoster();
   if(!document.getElementById("view-counselors").hidden) renderCounselors();
   document.getElementById("stampCount").textContent = DATA.length;
   document.getElementById("stampTime").textContent =
@@ -880,6 +948,7 @@ function init(){
   document.getElementById("tab-journey").onclick = ()=>switchView("journey");
   document.getElementById("tab-counselors").onclick = ()=>switchView("counselors");
   document.getElementById("focusClear").onclick = ()=>setFocus("all");
+  document.getElementById("nbView").onclick = viewNew;
   document.getElementById("roster").addEventListener("click", e=>{
     const go = e.target.closest(".ap-go");
     if(go){ doApprove(go.closest(".approve")); return; }
