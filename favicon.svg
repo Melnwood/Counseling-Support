@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Care Journey">
+  <rect width="64" height="64" rx="15" fill="#2F5E52"/>
+  <!-- a journey rising through three steps; the last one is where they are now -->
+  <path d="M16 46 L32 32 L48 18" stroke="#F6F3EC" stroke-width="4"
+        stroke-linecap="round" stroke-linejoin="round" opacity=".5" fill="none"/>
+  <circle cx="16" cy="46" r="6" fill="#F6F3EC"/>
+  <circle cx="32" cy="32" r="6" fill="#F6F3EC"/>
+  <circle cx="48" cy="18" r="9" fill="#C0872B"/>
+  <circle cx="48" cy="18" r="3.5" fill="#FEFCF8"/>
+</svg>
