@@ -252,6 +252,7 @@
   .approve .btn.go:disabled,.ap-sel:disabled{opacity:.55;cursor:not-allowed}
   .approve .btn.go:disabled:hover{background:#B03A6E}
   .approve .btn.go:hover{background:#94305C}
+  .ap-stale{font-size:11.5px;color:#8E5573;margin:10px 0 0;line-height:1.4;font-style:italic}
   .ap-msg{font-size:12.5px;margin:10px 0 0;padding:7px 10px;border-radius:8px}
   .ap-msg.ok{color:var(--pine-deep);background:#eef4f1;border:1px solid #cfe0da}
   .ap-msg.bad{color:var(--u-high);background:#fbf0ee;border:1px solid #e8c0b9}
@@ -492,23 +493,32 @@ const FOCUS = {
 /* counselor specialties + who they see — fallback for snapshot/preview.
    Live mode overwrites this from the proxy so Airtable edits win. */
 const COUNSELOR_META = {
-  "Joe Brooks":{types:["Spiritual Direction"],serves:["Men","Women"]},
-  "Bartek Tesluk":{types:["Spiritual Direction"],serves:["Men"]},
-  "Laura Hash":{types:["Individual","Marriage","Spiritual Direction"],serves:["Men","Women"]},
-  "Sharon Mormance":{types:["Spiritual Direction"],serves:["Women"]},
-  "Filip Ologeanu":{types:["Individual","Marriage"],serves:["Men","Women"]},
-  "David Bordner":{types:["Spiritual Direction"],serves:[]},
-  "Fiona Beckford":{types:["Individual","Marriage"],serves:["Men","Women"]},
-  "Wilma Piek":{types:["Individual"],serves:["Men","Women"]},
-  "Doug Feil":{types:["Individual"],serves:["Men","Women"]},
-  "Brenda Nickerson":{types:["Spiritual Direction"],serves:["Women"]},
-  "JD Senkbile":{types:["Individual","Marriage","Spiritual Direction"],serves:["Men","Women"]},
-  "Dan Hash":{types:["Individual","Marriage"],serves:["Men","Women"]},
-  "Audrey Chestnut":{types:["Spiritual Direction"],serves:["Men","Women"]}
+  "Joe Brooks":      {id:"rec402Idp0iJ3HjYd", types:["Spiritual Direction"], serves:["Men","Women"]},
+  "Bartek Tesluk":   {id:"rec7gXGekt2IbHEGC", types:["Spiritual Direction"], serves:["Men"]},
+  "Laura Hash":      {id:"recEnIVnL6iwNxczT", types:["Individual","Marriage","Spiritual Direction"], serves:["Men","Women"]},
+  "Sharon Mormance": {id:"recGOXqsVfcIEIaAR", types:["Spiritual Direction"], serves:["Women"]},
+  "Filip Ologeanu":  {id:"recI6roBarj6nDB0l", types:["Individual","Marriage"], serves:["Men","Women"]},
+  "David Bordner":   {id:"recKHo3tIouJ3wskI", types:["Spiritual Direction"], serves:[]},
+  "Fiona Beckford":  {id:"recSl252wG1WXuC5v", types:["Individual","Marriage"], serves:["Men","Women"]},
+  "Wilma Piek":      {id:"recSt0weuGddLevx9", types:["Individual"], serves:["Men","Women"]},
+  "Doug Feil":       {id:"receQD0l2Wr3SweFB", types:["Individual"], serves:["Men","Women"]},
+  "Brenda Nickerson":{id:"rechskvSyWYaMXvrU", types:["Spiritual Direction"], serves:["Women"]},
+  "JD Senkbile":     {id:"recjarXzAtVuLSMgn", types:["Individual","Marriage","Spiritual Direction"], serves:["Men","Women"]},
+  "Dan Hash":        {id:"recufKvW6uSaFM8yu", types:["Individual","Marriage"], serves:["Men","Women"]},
+  "Audrey Chestnut": {id:"recxckOhlIqCbmDDN", types:["Spiritual Direction"], serves:["Men","Women"]}
 };
 let CMETA = {...COUNSELOR_META};
-function buildMeta(list){ const m={}; (list||[]).forEach(c=>{ if(c&&c.name) m[c.name]={types:c.types||[],serves:c.serves||[]}; }); return m; }
+function buildMeta(list){ const m={}; (list||[]).forEach(c=>{ if(c&&c.name) m[c.name]={id:c.id,types:c.types||[],serves:c.serves||[]}; }); return m; }
 function metaFor(n){ return CMETA[n] || null; }
+/* Who can actually take this request, right now.
+   The list stored on the application is a snapshot from intake and goes stale
+   whenever a counselor joins, so we recompute it against the live roster. */
+function eligibleFor(type){
+  return Object.entries(CMETA)
+    .filter(([,m]) => (m.types||[]).includes(type) && m.id)
+    .map(([name,m]) => ({ id:m.id, name, types:m.types||[], serves:m.serves||[] }))
+    .sort((a,b)=> a.name.localeCompare(b.name));
+}
 function servesText(a){ const s=(a||[]).map(x=>String(x).toLowerCase());
   if(s.length>=2) return "men & women"; if(s.length===1) return s[0]; return ""; }
 
@@ -823,18 +833,39 @@ const APPROVE_URL = "/.netlify/functions/approve-application";
 
 function approveHTML(p){
   if(!isAwaitingApproval(p)) return "";
-  if(!p.recId || !p.counselorIds?.length) return "";
-  const opts = p.counselorIds.map((id,i)=>{
-    const nm = p.counselors[i] || id;
-    const m = metaFor(nm);
-    const sv = m ? servesText(m.serves) : "";
-    return `<option value="${esc(id)}">${esc(nm)}${sv?` — serves ${esc(sv)}`:""}</option>`;
+  if(!p.recId) return "";
+
+  // Live eligibility: everyone currently qualified for this counseling type.
+  let list = eligibleFor(p.type);
+  if(!list.length){                                  // fallback: the app's stored list
+    list = (p.counselorIds||[]).map((id,i)=>({ id, name:p.counselors[i]||id, types:[], serves:[] }));
+  }
+  if(!list.length) return "";
+
+  // Anyone qualified now but NOT on the application's frozen intake list.
+  const stored = new Set(p.counselorIds||[]);
+  const added  = list.filter(c=>!stored.has(c.id));
+
+  const opts = list.map(c=>{
+    // lead with the type they were asked for, then their other specialties
+    const others = c.types.filter(t=>t!==p.type);
+    const spec = c.types.length ? [p.type, ...others].join(", ") : "";
+    const sv = servesText(c.serves);
+    const bits = [spec, sv].filter(Boolean).join(" · ");
+    return `<option value="${esc(c.id)}">${esc(c.name)}${bits?` — ${esc(bits)}`:""}</option>`;
   }).join("");
+
   const note = LIVE
-    ? `Picks one counselor from the ${p.counselorIds.length} eligible for ${esc(p.type)}.
+    ? `${list.length} counselor${list.length===1?"":"s"} qualified for <b>${esc(p.type)}</b>.
        On approval, Airtable emails <b>that counselor only</b>.`
-    : `Preview — deploy with the Airtable token to enable. Live, this picks one of the
-       ${p.counselorIds.length} counselors eligible for ${esc(p.type)} and emails <b>that counselor only</b>.`;
+    : `Preview — deploy to enable. Live, this picks from the ${list.length} counselor${list.length===1?"":"s"}
+       qualified for <b>${esc(p.type)}</b> and emails <b>that counselor only</b>.`;
+
+  const stale = added.length
+    ? `<p class="ap-stale">Includes ${added.map(c=>esc(c.name)).join(", ")}, who joined after this application came in
+       — the list Airtable saved at intake is missing ${added.length===1?"them":"them"}.</p>`
+    : "";
+
   return `<div class="approve" data-app="${esc(p.recId)}">
     <div class="ap-head">Approve &amp; assign a counselor</div>
     <p class="ap-note">${note}</p>
@@ -842,6 +873,7 @@ function approveHTML(p){
       <select class="ap-sel" aria-label="Counselor" ${LIVE?"":"disabled"}>${opts}</select>
       <button class="btn go ap-go" ${LIVE?"":"disabled"}>Approve</button>
     </div>
+    ${stale}
     <p class="ap-msg" hidden></p>
   </div>`;
 }

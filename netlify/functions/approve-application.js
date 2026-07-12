@@ -28,6 +28,9 @@ const TOKEN = process.env.AIRTABLE_TOKEN;
 
 const APPLICATIONS_TABLE = "tbl8JpwXcI1DEvxof";
 const APPROVALS_TABLE    = "Director Approvals";
+const COUNSELORS_TABLE   = "Counselors";
+const COUNSELOR_TYPES_FIELD = "flduetAMDeeL7u2Ts";   // Individual | Marriage | Spiritual Direction
+const COUNSELOR_NAME_FIELD  = "fldzeTvZO3un9aL4V";
 
 /* Applications */
 const A = {
@@ -72,13 +75,6 @@ exports.handler = async (event) => {
     const app = await appRes.json();
     const f = app.fields || {};
 
-    // The chosen counselor must be one of the eligible counselors on the
-    // application — guards against approving someone who can't serve this type.
-    const eligible = Array.isArray(f[A.counselors]) ? f[A.counselors] : [];
-    if (eligible.length && !eligible.includes(counselorId)) {
-      return respond(400, { error: "That counselor is not on this application's eligible list" });
-    }
-
     // Don't double-approve: bail if an approval row already exists for this app.
     const existing = await findApproval(applicationId);
     if (existing) {
@@ -88,6 +84,23 @@ exports.handler = async (event) => {
     }
 
     const type = f[A.type]?.name || f[A.type];
+
+    // Verify the chosen counselor actually handles this counseling type.
+    // We check the Counselors table directly rather than the list stored on the
+    // application — that list is a snapshot from intake and goes stale whenever
+    // a new counselor joins, which would wrongly block a qualified match.
+    const cRes = await fetch(
+      `https://api.airtable.com/v0/${BASE}/${encodeURIComponent(COUNSELORS_TABLE)}/${counselorId}?returnFieldsByFieldId=true`,
+      { headers: { Authorization: `Bearer ${TOKEN}` } }
+    );
+    if (!cRes.ok) return respond(404, { error: "Counselor not found" });
+    const counselor = await cRes.json();
+    const cTypes = counselor.fields?.[COUNSELOR_TYPES_FIELD] || [];
+    const cName  = counselor.fields?.[COUNSELOR_NAME_FIELD] || "That counselor";
+    if (type && cTypes.length && !cTypes.includes(type)) {
+      return respond(400, { error: `${cName} doesn't do ${type} counseling.` });
+    }
+
     const fields = {
       [D.first]:     f[A.first] || "",
       [D.last]:      f[A.last]  || "",
