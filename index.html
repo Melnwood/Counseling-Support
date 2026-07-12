@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Counseling Care Journey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --oat:#F6F3EC; --paper:#FEFCF8; --ink:#22302C; --ink-soft:#586863;
+    --line:#E2DCCE; --pine:#2F5E52; --pine-deep:#234A40; --amber:#C0872B;
+    --clay:#AC4A31; --sky:#eef2ef; --done:#3B7565; --pine-soft:#A9C4BB;
+    --u-low:#3E77A8; --u-med:#E0902A; --u-high:#C4432E;   /* blue / amber / red — clearly distinct */
+    --radius:14px; --shadow:0 1px 2px rgba(34,48,44,.05), 0 8px 24px -16px rgba(34,48,44,.25);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--oat);color:var(--ink);font-family:"Inter",system-ui,sans-serif;
+    line-height:1.5;-webkit-font-smoothing:antialiased;padding:32px 24px 80px}
+  .wrap{max-width:1040px;margin:0 auto}
+
+  header.masthead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;
+    flex-wrap:wrap;padding-bottom:22px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--pine);
+    font-weight:600;margin:0 0 8px}
+  h1{font-family:"Fraunces",serif;font-weight:500;font-size:clamp(30px,5vw,46px);
+    line-height:1.02;margin:0;letter-spacing:-.01em}
+  h1 em{font-style:italic;color:var(--pine)}
+  .sub{color:var(--ink-soft);font-size:15px;margin:10px 0 0;max-width:46ch}
+  .stamp{font-size:12.5px;color:var(--ink-soft);text-align:right;white-space:nowrap}
+  .stamp b{color:var(--ink);font-weight:600}
+  .refresh{margin-top:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);
+    font:inherit;font-size:12.5px;padding:6px 12px;border-radius:999px;cursor:pointer;
+    transition:border-color .15s,background .15s}
+  .refresh:hover{border-color:var(--pine);background:var(--sky)}
+  .refresh:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  .refresh[data-busy="1"]{opacity:.6;pointer-events:none}
+
+  /* view tabs */
+  .tabs{display:flex;gap:4px;margin:22px 0 0;border-bottom:1px solid var(--line)}
+  .tab{border:none;background:none;font:inherit;font-size:14px;font-weight:500;color:var(--ink-soft);
+    padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s}
+  .tab:hover{color:var(--ink)}
+  .tab[aria-selected="true"]{color:var(--pine-deep);border-bottom-color:var(--pine)}
+  .tab:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:6px}
+
+  /* summary — clickable */
+  .summary{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin:24px 0 8px}
+  .stat{background:var(--paper);padding:16px 18px;cursor:pointer;text-align:left;
+    border:none;font:inherit;transition:background .14s;position:relative}
+  .stat:hover{background:var(--sky)}
+  .stat:focus-visible{outline:2px solid var(--amber);outline-offset:-2px}
+  .stat .n{font-family:"Fraunces",serif;font-size:30px;font-weight:500;line-height:1;color:var(--ink)}
+  .stat .l{font-size:12px;color:var(--ink-soft);margin-top:7px;letter-spacing:.01em;display:flex;
+    align-items:center;gap:5px}
+  .stat .l::after{content:"›";color:var(--pine-soft);font-size:15px;line-height:0;
+    opacity:0;transition:opacity .14s;margin-left:auto}
+  .stat:hover .l::after,.stat[aria-pressed="true"] .l::after{opacity:1}
+  .stat.flag{background:#FBEDF3;box-shadow:inset 0 0 0 1px #F0CFDE}
+  .stat.flag:hover{background:#F8E3EC}
+  .stat.flag .n{color:#B03A6E}
+  .stat.flag .l{color:#8E5573}
+  .stat.flag .l::after{color:#D69BB8}
+  .stat.flag[aria-pressed="true"]{background:#F8E3EC;box-shadow:inset 0 -3px 0 #B03A6E}
+  .stat.flag.zero .n{color:var(--ink)}
+  .stat[aria-pressed="true"]{background:var(--sky);box-shadow:inset 0 -3px 0 var(--pine)}
+  .csum{grid-template-columns:repeat(5,1fr);margin-top:6px}
+  .stat .l2{font-size:11px;color:var(--ink-soft);margin-top:4px;line-height:1.25}
+  .stat .of{font-size:15px;color:var(--ink-soft);font-weight:500}
+  .avail{color:var(--pine);font-weight:500}
+  .stat.info{cursor:default}
+  .stat.info:hover{background:var(--paper)}
+  .stat.info .l::after{display:none}
+  .stat.info .l2 .uc{display:inline-flex;align-items:center;gap:4px;margin-right:9px}
+  .stat.info .l2 .udot{width:8px;height:8px}
+
+  .legend{margin:26px 0 10px;padding:16px 18px;background:var(--paper);
+    border:1px solid var(--line);border-radius:var(--radius)}
+  .legend h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);
+    font-weight:600;margin:0 0 14px}
+  .legend-track{display:flex;align-items:center;gap:0;flex-wrap:wrap}
+  .lg-step{display:flex;align-items:center;gap:9px;flex:1;min-width:130px}
+  .lg-dot{width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;
+    font-size:11px;font-weight:600;background:var(--pine);color:#fff}
+  .lg-label{font-size:12.5px;color:var(--ink);line-height:1.2}
+  .lg-arrow{color:var(--line);margin:0 4px;flex:none}
+
+  .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:24px 0 14px}
+  .controls .grp{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:var(--paper);color:var(--ink-soft);font:inherit;
+    font-size:13px;padding:6px 13px;border-radius:999px;cursor:pointer;transition:all .14s}
+  .chip:hover{border-color:var(--pine)}
+  .chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .chip:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  .count{color:var(--ink-soft);font-size:13px;margin-left:auto}
+
+  .focusbar{display:none;align-items:center;gap:10px;margin:0 0 14px;padding:9px 14px;
+    background:var(--sky);border:1px solid #cfe0da;border-radius:10px;font-size:13px;color:var(--pine-deep)}
+  .focusbar.on{display:flex}
+  .focusbar b{font-weight:600}
+  .focusbar button{margin-left:auto;border:1px solid #bcd2ca;background:var(--paper);color:var(--pine-deep);
+    font:inherit;font-size:12.5px;padding:4px 11px;border-radius:999px;cursor:pointer}
+  .focusbar button:hover{border-color:var(--pine)}
+
+  .grp-sec{margin-bottom:16px}
+  .grp-head{width:100%;display:flex;align-items:center;gap:12px;background:none;border:none;
+    font:inherit;text-align:left;cursor:pointer;padding:10px 4px;border-bottom:1px solid var(--line);color:var(--ink)}
+  .grp-head:hover .grp-title{color:var(--pine-deep)}
+  .grp-head:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:6px}
+  .grp-title{font-family:"Fraunces",serif;font-size:17px;font-weight:500}
+  .grp-count{font-size:12px;font-weight:600;color:var(--pine-deep);background:var(--sky);
+    border:1px solid #cfe0da;border-radius:999px;padding:1px 9px}
+  .grp-head .chev{margin-left:auto}
+  .grp-head[aria-expanded="true"] .chev{transform:rotate(90deg)}
+  .grp-blurb{font-size:12px;color:var(--ink-soft);margin:12px 4px 4px}
+  .grp-body{margin:8px 0 6px}
+  .grp-body .roster-inner{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+  .udot{width:10px;height:10px;border-radius:50%;flex:none}
+  .udot.Low{background:var(--u-low)}.udot.Medium{background:var(--u-med)}.udot.High{background:var(--u-high)}
+  .roster{display:flex;flex-direction:column;gap:10px}
+  .person{background:var(--paper);border:1px solid var(--line);border-left-width:4px;
+    border-left-color:var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .person.u-Low{border-left-color:var(--u-low)}
+  .person.u-Medium{border-left-color:var(--u-med)}
+  .person.u-High{border-left-color:var(--u-high)}
+  .p-summary{width:100%;display:flex;align-items:center;gap:14px;background:none;border:none;
+    font:inherit;text-align:left;cursor:pointer;padding:15px 20px;color:var(--ink)}
+  .p-summary:hover{background:var(--sky)}
+  .p-summary:focus-visible{outline:2px solid var(--amber);outline-offset:-2px}
+  .p-sum-name{font-family:"Fraunces",serif;font-size:18px;font-weight:500}
+  .p-sum-name .app{font-family:"Inter";font-size:12px;color:var(--ink-soft);font-weight:500;margin-left:8px}
+  .p-sum-date{margin-left:auto;font-size:12.5px;color:var(--ink-soft);white-space:nowrap}
+  .chev{color:var(--pine-soft);font-size:20px;line-height:1;transition:transform .18s;flex:none}
+  .p-summary[aria-expanded="true"] .chev{transform:rotate(90deg)}
+  .p-detail{padding:4px 20px 20px;border-top:1px solid var(--line)}
+  .p-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;margin:14px 0 2px}
+  .tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;
+    border:1px solid var(--line);color:var(--ink-soft);background:var(--oat)}
+  .tag.type{color:var(--pine);border-color:#cfe0da;background:#eef4f1}
+  .tag.couns{color:var(--pine-deep);border-color:#cfe0da;background:#eef4f1;font-weight:500}
+  .tag.couns .mk{color:var(--pine)}
+  .u-dot{width:7px;height:7px;border-radius:50%}
+  .u-Low .u-dot{background:var(--u-low)}
+  .u-Medium .u-dot{background:var(--u-med)}
+  .u-High .u-dot{background:var(--u-high)}
+  .u-High{color:var(--u-high);border-color:#e8c0b9;background:#fbf0ee}
+
+  .p-status{margin:14px 0 20px;font-size:13.5px;color:var(--ink-soft);
+    display:flex;align-items:center;gap:8px}
+  .p-status .now{color:var(--ink);font-weight:600}
+  .p-status .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);flex:none}
+
+  /* vertical step track — reads cleanly on a phone */
+  .vtrack{margin-top:4px}
+  .vstep{display:flex;gap:13px}
+  .vcol{position:relative;width:24px;flex:none;display:flex;justify-content:center}
+  .vcol::before{content:"";position:absolute;left:50%;transform:translateX(-50%);width:2px;
+    background:var(--line);top:0;bottom:0}
+  .vstep:first-child .vcol::before{top:12px}
+  .vstep:last-child .vcol::before{bottom:calc(100% - 12px)}
+  .vdot{position:relative;z-index:1;width:24px;height:24px;border-radius:50%;display:grid;
+    place-items:center;font-size:12px;font-weight:600;background:var(--paper);
+    border:2px solid var(--line);color:var(--ink-soft)}
+  .vlabel{padding:1px 0 16px;font-size:14px;color:var(--ink-soft);line-height:1.3;
+    display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .vstep:last-child .vlabel{padding-bottom:2px}
+  .vstep.done .vdot{background:var(--done);border-color:var(--done);color:#fff}
+  .vstep.done .vlabel{color:var(--ink)}
+  .vstep.current .vdot{background:#fff;border-color:var(--amber);color:var(--amber);
+    box-shadow:0 0 0 4px rgba(192,135,43,.16)}
+  .vstep.current .vlabel{color:var(--amber);font-weight:600}
+  .vnow{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--amber);
+    background:#fbf1df;border:1px solid #ecd6a8;border-radius:999px;padding:1px 8px}
+
+  /* counselor view */
+  .cintro{margin:24px 0 4px;color:var(--ink-soft);font-size:14px;max-width:60ch}
+  .cnote{margin:4px 0 20px;font-size:12.5px;color:var(--ink-soft)}
+  .cnote b{color:var(--pine-deep);font-weight:600}
+  .clist{display:flex;flex-direction:column;gap:10px}
+  .crow{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden}
+  .c-summary{width:100%;display:flex;align-items:center;gap:12px;background:none;border:none;
+    font:inherit;text-align:left;cursor:pointer;padding:14px 18px;color:var(--ink)}
+  .c-summary:hover{background:var(--sky)}
+  .c-summary:focus-visible{outline:2px solid var(--amber);outline-offset:-2px}
+  .cname{font-family:"Fraunces",serif;font-size:17px;font-weight:500;margin:0}
+  .cnums{font-size:12.5px;color:var(--ink-soft);display:flex;gap:12px;align-items:center;
+    margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+  .cnums .assigned{color:var(--pine-deep);font-weight:600}
+  .cnums .assigned .mk{color:var(--pine)}
+  .c-summary[aria-expanded="true"] .chev{transform:rotate(90deg)}
+  .cdet{padding:2px 18px 16px;border-top:1px solid var(--line)}
+  .cmeta{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:12px}
+  .spec{font-size:11px;padding:2px 9px;border-radius:999px;border:1px solid #cfe0da;
+    background:#eef4f1;color:var(--pine-deep)}
+  .serves{font-size:11.5px;color:var(--ink-soft);font-style:italic}
+  .cbar{height:10px;border-radius:6px;background:var(--oat);margin:12px 0 10px;overflow:hidden;
+    display:flex;border:1px solid var(--line)}
+  .cbar .seg-a{background:var(--pine)}
+  .cbar .seg-c{background:var(--pine-soft)}
+  .cchips{display:flex;gap:5px;flex-wrap:wrap}
+  .cchips-label{font-size:10.5px;color:var(--ink-soft);margin:2px 0 7px;letter-spacing:.06em;text-transform:uppercase}
+  .cnone{font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-top:2px}
+  .cchip{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);
+    color:var(--ink-soft);background:var(--oat)}
+  .cchip.a{background:var(--pine);color:#fff;border-color:var(--pine)}
+  .clegend{display:flex;gap:16px;margin:16px 0 0;font-size:12px;color:var(--ink-soft)}
+  .clegend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .sw.a{background:var(--pine)} .sw.c{background:var(--pine-soft)}
+
+  .empty{padding:40px;text-align:center;color:var(--ink-soft);background:var(--paper);
+    border:1px dashed var(--line);border-radius:var(--radius)}
+  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;
+    color:var(--ink-soft);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  [hidden]{display:none!important}
+  /* approve panel */
+  .approve{margin-top:18px;padding:14px 15px;border-radius:12px;
+    background:#FBEDF3;border:1px solid #F0CFDE}
+  .ap-head{font-size:13px;font-weight:600;color:#B03A6E;margin-bottom:4px}
+  .ap-note{font-size:12px;color:#8E5573;margin:0 0 11px;line-height:1.4}
+  .ap-row{display:flex;gap:8px;flex-wrap:wrap}
+  .ap-sel{flex:1;min-width:190px;font:inherit;font-size:13.5px;color:var(--ink);background:#fff;
+    border:1px solid #E4BDD0;border-radius:9px;padding:8px 10px}
+  .ap-sel:focus{outline:2px solid #B03A6E;border-color:#B03A6E}
+  .approve .btn.go{background:#B03A6E;border-color:#B03A6E}
+  .approve .btn.go:hover{background:#94305C}
+  .ap-msg{font-size:12.5px;margin:10px 0 0;padding:7px 10px;border-radius:8px}
+  .ap-msg.ok{color:var(--pine-deep);background:#eef4f1;border:1px solid #cfe0da}
+  .ap-msg.bad{color:var(--u-high);background:#fbf0ee;border:1px solid #e8c0b9}
+  /* new-application modal */
+  .modal{position:fixed;inset:0;background:rgba(34,48,44,.45);z-index:50;display:flex;
+    align-items:flex-start;justify-content:center;padding:36px 16px;overflow:auto}
+  .sheet{background:var(--paper);border-radius:16px;max-width:620px;width:100%;
+    box-shadow:0 24px 60px -20px rgba(34,48,44,.5);padding:22px 24px 18px}
+  .sheet-head{display:flex;align-items:center;gap:12px}
+  .sheet-head h2{font-family:"Fraunces",serif;font-weight:500;font-size:22px;margin:0;flex:1}
+  .x{border:none;background:none;font-size:26px;line-height:1;color:var(--ink-soft);cursor:pointer;padding:0 4px}
+  .x:hover{color:var(--ink)}
+  .sheet-note{font-size:12.5px;color:var(--ink-soft);margin:6px 0 16px}
+  .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .fgrid label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--ink-soft);font-weight:500}
+  .fgrid label.wide{grid-column:span 2}
+  .fgrid input,.fgrid select,.fgrid textarea{font:inherit;font-size:14px;color:var(--ink);
+    background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 10px;width:100%}
+  .fgrid input:focus,.fgrid select:focus,.fgrid textarea:focus{outline:2px solid var(--amber);outline-offset:0;border-color:var(--amber)}
+  .fgrid textarea{resize:vertical}
+  .warn{font-size:13px;color:var(--u-high);background:#fbf0ee;border:1px solid #e8c0b9;
+    border-radius:9px;padding:8px 11px;margin:14px 0 0}
+  .sheet-foot{display:flex;align-items:center;gap:9px;margin-top:18px;flex-wrap:wrap}
+  .sheet-foot .hint{font-size:11.5px;color:var(--ink-soft);flex:1;min-width:160px}
+  .btn{font:inherit;font-size:13.5px;padding:8px 16px;border-radius:999px;cursor:pointer;border:1px solid var(--line)}
+  .btn.ghost{background:var(--paper);color:var(--ink-soft)}
+  .btn.ghost:hover{border-color:var(--pine)}
+  .btn.go{background:var(--pine);color:#fff;border-color:var(--pine);font-weight:600}
+  .btn.go:hover{background:var(--pine-deep)}
+  .btn[data-busy="1"]{opacity:.6;pointer-events:none}
+  @media (max-width:560px){ .fgrid{grid-template-columns:1fr} .fgrid label.wide{grid-column:span 1} }
+
+  @media (max-width:760px){
+    body{padding:22px 15px 64px}
+    .summary{grid-template-columns:repeat(2,1fr)}
+    #summary .stat:last-child{grid-column:span 2}
+    #csummary .stat:last-child{grid-column:span 2}
+    h1{font-size:30px}
+    .p-sum-name{font-size:16px}
+    .p-summary{padding:14px 15px;gap:11px}
+    .p-detail{padding:4px 15px 18px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">Member Care · Counseling Support</p>
+      <h1>The care <em>journey</em></h1>
+      <p class="sub">Where each person stands, from the day they ask for help to the day support is fully in place.</p>
+    </div>
+    <div>
+      <p class="stamp">Showing <b id="stampCount">—</b> active applications<br/>Updated <b id="stampTime">—</b></p>
+      <button class="refresh" id="newAppBtn">+ New application</button>
+      <button class="refresh" id="refreshBtn" hidden>↻ Refresh from Airtable</button>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" id="tab-journey" role="tab" aria-selected="true">Care journey</button>
+    <button class="tab" id="tab-counselors" role="tab" aria-selected="false">Counselor load</button>
+  </div>
+
+  <!-- ============ JOURNEY VIEW ============ -->
+  <div id="view-journey" role="tabpanel">
+    <section class="summary" id="summary"></section>
+
+    <section class="legend">
+      <h2>The steps along the way</h2>
+      <div class="legend-track" id="legendTrack"></div>
+    </section>
+
+    <div class="controls">
+      <div class="grp" id="typeFilters"></div>
+      <div class="grp"><button class="chip" id="attnToggle" aria-pressed="false">Needs attention now</button></div>
+      <span class="count" id="visCount"></span>
+    </div>
+
+    <div class="focusbar" id="focusBar">
+      <span>Showing <b id="focusLabel"></b></span>
+      <button id="focusClear">Show everyone</button>
+    </div>
+
+    <section class="roster" id="roster"></section>
+  </div>
+
+  <!-- ============ COUNSELOR VIEW ============ -->
+  <div id="view-counselors" role="tabpanel" hidden>
+    <section class="summary csum" id="csummary"></section>
+    <p class="cintro">Who's carrying the most people. <b>Assigned</b> means a counselor is locked in for that person; <b>considered</b> means they're on the shortlist while a match is still being made.</p>
+    <div class="clegend">
+      <span><i class="sw a"></i> Assigned</span>
+      <span><i class="sw c"></i> Considered (shortlisted)</span>
+    </div>
+    <p class="cnote">Most applications haven't narrowed to one counselor yet, so "considered" reflects shortlist reach — a useful read on who keeps getting tapped.</p>
+    <div class="focusbar" id="cfocusBar">
+      <span>Showing <b id="cfocusLabel"></b></span>
+      <button id="cfocusClear">Show all counselors</button>
+    </div>
+    <section class="clist" id="clist"></section>
+  </div>
+
+  <div class="modal" id="appModal" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+      <div class="sheet-head">
+        <h2 id="mTitle">New counseling application</h2>
+        <button class="x" id="mClose" aria-label="Close">×</button>
+      </div>
+      <p class="sheet-note">Creates the application in Airtable exactly as the form does — the same automations run.</p>
+      <div class="fgrid">
+        <label>First name <input id="f_first" required /></label>
+        <label>Last name <input id="f_last" required /></label>
+        <label class="wide">Email <input id="f_email" type="email" required /></label>
+        <label class="wide">Phone <input id="f_phone" inputmode="tel" placeholder="optional" /></label>
+        <label>Counseling type
+          <select id="f_type">
+            <option>Individual</option><option>Marriage</option><option>Spiritual Direction</option>
+          </select>
+        </label>
+        <label>Urgency
+          <select id="f_urgency"><option>Low</option><option selected>Medium</option><option>High</option></select>
+        </label>
+        <label>Culture
+          <select id="f_culture"><option value="1st">1st culture</option><option value="2nd">2nd culture</option></select>
+        </label>
+        <label>Cost agreement
+          <select id="f_cost">
+            <option value="180">Agrees to pay $180</option>
+            <option value="240">Agrees to pay $240</option>
+            <option value="360">Agrees to pay $360</option>
+            <option value="480">Agrees to pay $480</option>
+            <option value="0">No cost / scholarship</option>
+          </select>
+        </label>
+        <label class="wide">Reason (short) <input id="f_reason" placeholder="e.g. burnout" /></label>
+        <label class="wide">What's going on <textarea id="f_detail" rows="3"></textarea></label>
+      </div>
+      <p class="warn" id="mWarn" hidden></p>
+      <div class="sheet-foot">
+        <span class="hint">Sets one cost checkbox — that's what the intake email keys off.</span>
+        <button class="btn ghost" id="mCancel">Cancel</button>
+        <button class="btn go" id="mSubmit">Create application</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Josiah Venture · Member Care</span>
+    <span id="dataMode">Snapshot view</span>
+  </footer>
+</div>
+
+<script>
+const CONFIG = {
+  PROXY_URL: "/.netlify/functions/counseling-applications",
+  BASE_ID:  "appbfOtX0IyCPV9T1",
+  TABLE_ID: "tbl8JpwXcI1DEvxof"
+};
+const FIELD = {
+  first:"fldxMDtlRzzEglkYn", last:"fldAhAxq1UK2WjCSu", email:"fld2ICZrCti8r21tw",
+  appNo:"fldPxsR3bb4o4fPuZ", type:"fldeFGYqZkNO3EttZ", urgency:"fld61ukbkJ58h2kVD",
+  appStatus:"fld8wV9MjFotORTy2", statusText:"fldbQhQMy7272nfhC",
+  matched:"fldSpxQ8mgzbxUlrk", transfer:"fldd3dQ2vqg3wsupF",
+  submitted:"fldKD4EADERIGsoLN", yourCost:"fldpH7piGlH759TxR",
+  counselors:"fldFsMIiavyx2UYfE"
+};
+const STEPS = [
+  {key:"submitted", label:"Submitted"}, {key:"approved", label:"Approved"},
+  {key:"matched", label:"Counselor matched"}, {key:"scheduled", label:"Schedule confirmed"},
+  {key:"counseling", label:"In counseling"}, {key:"transfer", label:"Transfer complete"}
+];
+const STEP_SENTENCE = [
+  "Waiting on your review and approval", "Approved — finding a counselor",
+  "Counselor matched — arranging a time", "Session time confirmed",
+  "Counseling underway", "Support fully in place"
+];
+const SNAPSHOT = [
+  {appNo:19,first:"Zuzi",last:"Dzubakovska",email:"zuzana.dzubakovska@tckompas.sk",type:"Individual",urgency:"High",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2024-11-15",yourCost:180,counselors:["JD Senkbile"]},
+  {appNo:34,first:"Lelde",last:"Keice",email:"lkeice@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:true,transfer:false,submitted:"2025-10-06",yourCost:180,counselors:["Laura Hash","JD Senkbile","Dan Hash"]},
+  {appNo:36,first:"Olya",last:"Meland",email:"omeland@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2025-11-26",yourCost:0,counselors:["Laura Hash","JD Senkbile","Dan Hash"]},
+  {appNo:37,first:"Ion",last:"Matei",email:"imatei@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2025-12-02",yourCost:0,counselors:["Laura Hash","JD Senkbile","Dan Hash"]},
+  {appNo:43,first:"Johnny",last:"Stevens",email:"jstevens@josiahventure.com",type:"Spiritual Direction",urgency:"Low",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2026-01-29",yourCost:0,counselors:["Joe Brooks","Bartek Tesluk","Laura Hash","Sharon Mormance","Brenda Nickerson","JD Senkbile","Audrey Chestnut"]},
+  {appNo:45,first:"Casey",last:"Yorman",email:"cyorman@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2026-03-03",yourCost:360,counselors:["Laura Hash","Filip Ologeanu","Wilma Piek","JD Senkbile","Dan Hash"]},
+  {appNo:46,first:"Doroteja",last:"Kolar",email:"dkolar@josiahventure.com",type:"Individual",urgency:"Medium",appStatus:"Approved",statusText:"Application status is Approved",matched:false,transfer:false,submitted:"2026-03-03",yourCost:180,counselors:["Laura Hash","Filip Ologeanu","Wilma Piek","JD Senkbile","Dan Hash"]},
+  {appNo:47,first:"Henryk",last:"Molin",email:"hmolin@josiahventure.com",type:"Marriage",urgency:"Low",appStatus:"Submitted",statusText:"Application status is Submitted",matched:false,transfer:false,submitted:"2026-03-17",yourCost:240,counselors:["Laura Hash","Filip Ologeanu","JD Senkbile","Dan Hash"]},
+  {appNo:52,first:"Trisha",last:"Wynn",email:"twynn@josiahventure.com",type:"Individual",urgency:"High",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2026-07-06",yourCost:360,counselors:["Laura Hash","Filip Ologeanu","Wilma Piek","Doug Feil","JD Senkbile","Dan Hash"]},
+  {appNo:53,first:"Laura",last:"Hash",email:"lhash@josiahventure.com",type:"Individual",urgency:"Low",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2026-07-08",yourCost:0,counselors:["Laura Hash","Filip Ologeanu","Fiona Beckford","Wilma Piek","Doug Feil","JD Senkbile","Dan Hash"]}
+];
+
+/* ---------- logic ---------- */
+function stepIndexFor(p){
+  const s = (p.statusText||"").toLowerCase();
+  if(s.includes("denied")||s.includes("reject")) return {idx:-1, denied:true};
+  let idx = 0;
+  if(p.appStatus==="Approved" || s.includes("approved") || p.matched) idx = 1;
+  if(p.matched) idx = 2;
+  if(s.includes("confirmed schedule") || s.includes("scheduled")) idx = 3;
+  if(s.includes("session") || s.includes("counseling") || s.includes("in progress")) idx = 4;
+  if(p.transfer || s.includes("transfer") || s.includes("complete") || s.includes("closed")) idx = 5;
+  return {idx, denied:false};
+}
+function resolveCounselor(p){
+  const list = Array.isArray(p.counselors) ? p.counselors.filter(Boolean) : [];
+  return { name: list.length===1 ? list[0] : null, shortlist:list };
+}
+function mapAirtableRecord(r){
+  const f = r.fields || {};
+  const sel = v => (v && v.name) ? v.name : v;
+  const list = f[FIELD.counselors];
+  return {
+    recId: r.id,
+    appNo: f[FIELD.appNo], first: f[FIELD.first]||"", last: f[FIELD.last]||"", email: f[FIELD.email]||"",
+    type: sel(f[FIELD.type])||"—", urgency: sel(f[FIELD.urgency])||"—",
+    appStatus: sel(f[FIELD.appStatus])||"", statusText: f[FIELD.statusText]||"",
+    matched: sel(f[FIELD.matched])==="Yes", transfer: !!f[FIELD.transfer],
+    submitted: f[FIELD.submitted]||"", yourCost: f[FIELD.yourCost]||0,
+    counselors: Array.isArray(list) ? list.map(v=> (v&&v.name) ? v.name : v) : [],
+    counselorIds: Array.isArray(list) ? list.map(v=> (v&&v.id) ? v.id : null).filter(Boolean) : []
+  };
+}
+
+/* focus predicates — counts match the tiles exactly */
+const FOCUS = {
+  all:      {label:"everyone", test:()=>true},
+  awaiting: {label:"people awaiting your approval", test:isAwaitingApproval},
+  finding:  {label:"people approved and finding a counselor", test:p=>stepIndexFor(p).idx===1},
+  matched:  {label:"people matched and arranging a time", test:p=>stepIndexFor(p).idx===2},
+  confirmed:{label:"people with a confirmed schedule", test:p=>stepIndexFor(p).idx>=3}
+};
+
+/* counselor specialties + who they see — fallback for snapshot/preview.
+   Live mode overwrites this from the proxy so Airtable edits win. */
+const COUNSELOR_META = {
+  "Joe Brooks":{types:["Spiritual Direction"],serves:["Men","Women"]},
+  "Bartek Tesluk":{types:["Spiritual Direction"],serves:["Men"]},
+  "Laura Hash":{types:["Individual","Marriage","Spiritual Direction"],serves:["Men","Women"]},
+  "Sharon Mormance":{types:["Spiritual Direction"],serves:["Women"]},
+  "Filip Ologeanu":{types:["Individual","Marriage"],serves:["Men","Women"]},
+  "David Bordner":{types:["Spiritual Direction"],serves:[]},
+  "Fiona Beckford":{types:["Individual","Marriage"],serves:["Men","Women"]},
+  "Wilma Piek":{types:["Individual"],serves:["Men","Women"]},
+  "Doug Feil":{types:["Individual"],serves:["Men","Women"]},
+  "Brenda Nickerson":{types:["Spiritual Direction"],serves:["Women"]},
+  "JD Senkbile":{types:["Individual","Marriage","Spiritual Direction"],serves:["Men","Women"]},
+  "Dan Hash":{types:["Individual","Marriage"],serves:["Men","Women"]},
+  "Audrey Chestnut":{types:["Spiritual Direction"],serves:["Men","Women"]}
+};
+let CMETA = {...COUNSELOR_META};
+function buildMeta(list){ const m={}; (list||[]).forEach(c=>{ if(c&&c.name) m[c.name]={types:c.types||[],serves:c.serves||[]}; }); return m; }
+function metaFor(n){ return CMETA[n] || null; }
+function servesText(a){ const s=(a||[]).map(x=>String(x).toLowerCase());
+  if(s.length>=2) return "men & women"; if(s.length===1) return s[0]; return ""; }
+
+/* collapsible groups — each person lands in exactly one, by where they are */
+const GROUPS = [
+  {key:"recent",     title:"New — last 2 weeks", blurb:"Just came in. Are they approved yet, and do they have a counselor?"},
+  {key:"pipeline",   title:"In the pipeline",    blurb:"Applied earlier and still getting set up — awaiting approval or finding a counselor."},
+  {key:"counseling", title:"In counseling",      blurb:"Counselor confirmed and sessions underway."},
+  {key:"complete",   title:"Complete",           blurb:"Support fully in place; transfer done."}
+];
+function groupKeyFor(p){
+  const {idx} = stepIndexFor(p);
+  if(idx>=5) return "complete";
+  if(idx>=3) return "counseling";
+  const days = (Date.now() - new Date((p.submitted||"1970-01-01")+"T00:00:00")) / 86400000;
+  return days<=14 ? "recent" : "pipeline";
+}
+
+let DATA = [];
+let state = { type:"All", attn:false, focus:"all" };
+let cstate = { type:null, showIdle:false };
+function isAwaitingApproval(p){ return p.appStatus==="Submitted"; }
+function fmtDate(iso){ if(!iso) return "—";
+  return new Date(iso+"T00:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); }
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function renderSummary(){
+  const total = DATA.length;
+  const cards = [
+    {n:total, l:"People in process", focus:"all"},
+    {n:DATA.filter(FOCUS.awaiting.test).length, l:"Awaiting your approval", focus:"awaiting", flag:true},
+    {n:DATA.filter(FOCUS.finding.test).length, l:"Approved · finding counselor", focus:"finding"},
+    {n:DATA.filter(FOCUS.matched.test).length, l:"Matched · arranging time", focus:"matched"},
+    {n:DATA.filter(FOCUS.confirmed.test).length, l:"Schedule confirmed +", focus:"confirmed"}
+  ];
+  document.getElementById("summary").innerHTML = cards.map(c=>`
+    <button class="stat ${c.flag?"flag":""} ${c.flag&&c.n===0?"zero":""}" data-focus="${c.focus}"
+      aria-pressed="${state.focus===c.focus}">
+      <div class="n">${c.n}</div><div class="l">${c.l}</div></button>`).join("");
+  document.querySelectorAll(".stat[data-focus]").forEach(b=>{
+    b.onclick = ()=> setFocus(b.dataset.focus);
+  });
+}
+function setFocus(key){
+  state.focus = (state.focus===key && key!=="all") ? "all" : key;
+  state.type = "All"; state.attn = false;               // clean drill-down
+  renderSummary(); renderControls(); renderRoster();
+  const bar = document.getElementById("focusBar");
+  if(state.focus!=="all"){
+    bar.classList.add("on");
+    document.getElementById("focusLabel").textContent = FOCUS[state.focus].label;
+  } else bar.classList.remove("on");
+  document.getElementById("roster").scrollIntoView({behavior: reduceMotion?"auto":"smooth", block:"start"});
+}
+function renderLegend(){
+  document.getElementById("legendTrack").innerHTML = STEPS.map((s,i)=>`
+    <div class="lg-step"><span class="lg-dot">${i+1}</span><span class="lg-label">${s.label}</span></div>
+    ${i<STEPS.length-1?'<span class="lg-arrow">→</span>':''}`).join("");
+}
+function renderControls(){
+  const types = ["All", ...Array.from(new Set(DATA.map(p=>p.type)))];
+  document.getElementById("typeFilters").innerHTML = types.map(t=>
+    `<button class="chip" data-type="${esc(t)}" aria-pressed="${state.type===t}">${esc(t)}</button>`).join("");
+  document.querySelectorAll("[data-type]").forEach(b=>{
+    b.onclick = ()=>{ state.type=b.dataset.type;
+      document.querySelectorAll("[data-type]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.type===state.type));
+      renderRoster(); };
+  });
+  const at = document.getElementById("attnToggle");
+  at.setAttribute("aria-pressed", state.attn);
+  at.onclick = ()=>{ state.attn=!state.attn; at.setAttribute("aria-pressed",state.attn); renderRoster(); };
+}
+function stepperHTML(cur){
+  return `<div class="vtrack">` + STEPS.map((s,i)=>{
+    const st = i<cur ? "done" : (i===cur ? "current" : "todo");
+    const mark = i<cur ? "✓" : (i+1);
+    const now = i===cur ? `<span class="vnow">Now</span>` : "";
+    return `<div class="vstep ${st}">
+      <div class="vcol"><span class="vdot">${mark}</span></div>
+      <div class="vlabel">${s.label}${now}</div>
+    </div>`;
+  }).join("") + `</div>`;
+}
+function counselorTag(p){
+  const {name, shortlist} = resolveCounselor(p);
+  if(name) return `<span class="tag couns" title="Assigned counselor"><span class="mk">✦</span>${esc(name)}</span>`;
+  if(shortlist.length) return `<span class="tag" title="Candidates: ${esc(shortlist.join(', '))}">Shortlist · ${shortlist.length} counselors</span>`;
+  return "";
+}
+function renderRoster(){
+  let rows = DATA.filter(FOCUS[state.focus].test);
+  if(state.type!=="All") rows = rows.filter(p=>p.type===state.type);
+  if(state.attn) rows = rows.filter(p=>isAwaitingApproval(p) || (p.urgency==="High" && stepIndexFor(p).idx<3));
+
+  const urgRank = {High:0, Medium:1, Low:2};
+  const sortRows = a => a.sort((x,y)=>
+    (urgRank[x.urgency]??9)-(urgRank[y.urgency]??9) || new Date(y.submitted)-new Date(x.submitted));
+
+  document.getElementById("visCount").textContent = `${rows.length} of ${DATA.length} shown`;
+  const roster = document.getElementById("roster");
+  if(!rows.length){ roster.innerHTML = `<div class="empty">No one matches this view right now.</div>`; return; }
+
+  const personHTML = p => {
+    const {idx,denied} = stepIndexFor(p);
+    const sentence = denied ? "Application not moving forward" : STEP_SENTENCE[idx];
+    const cost = p.yourCost>0 ? `$${p.yourCost} member share` : "No member share";
+    const did = `det-${p.appNo}`;
+    return `<article class="person u-${esc(p.urgency)}">
+      <button class="p-summary" aria-expanded="false" aria-controls="${did}">
+        <span class="udot ${esc(p.urgency)}" title="${esc(p.urgency)} urgency"></span>
+        <span class="p-sum-name">${esc(p.first)} ${esc(p.last)}<span class="app">#${p.appNo}</span></span>
+        <span class="p-sum-date">Applied ${fmtDate(p.submitted)}</span>
+        <span class="chev" aria-hidden="true">›</span>
+      </button>
+      <div class="p-detail" id="${did}" hidden>
+        <div class="p-meta">
+          <span class="tag type">${esc(p.type)}</span>
+          <span class="tag u-${esc(p.urgency)}"><span class="u-dot"></span>${esc(p.urgency)} urgency</span>
+          ${counselorTag(p)}
+          <span class="tag">${cost}</span>
+        </div>
+        <div class="p-status"><span class="dot"></span><span>Now: <span class="now">${sentence}</span></span></div>
+        ${stepperHTML(denied?0:idx)}
+        ${approveHTML(p)}
+      </div>
+    </article>`;
+  };
+
+  let openedFirst = false;
+  roster.innerHTML = GROUPS.map(g=>{
+    const gr = sortRows(rows.filter(p=>groupKeyFor(p)===g.key));
+    if(!gr.length) return "";
+    const open = !openedFirst; openedFirst = true;
+    const bid = `grp-${g.key}`;
+    return `<section class="grp-sec">
+      <button class="grp-head" aria-expanded="${open}" aria-controls="${bid}">
+        <span class="grp-title">${g.title}</span>
+        <span class="grp-count">${gr.length}</span>
+        <span class="chev" aria-hidden="true">›</span>
+      </button>
+      <div class="grp-body" id="${bid}" ${open?"":"hidden"}>
+        <p class="grp-blurb">${g.blurb}</p>
+        <div class="roster-inner">${gr.map(personHTML).join("")}</div>
+      </div>
+    </section>`;
+  }).join("");
+}
+
+/* ---------- counselor load ---------- */
+function counselorStats(){
+  const map = new Map();
+  const get = n => { if(!map.has(n)) map.set(n,{name:n,assigned:[],considered:[]}); return map.get(n); };
+  DATA.forEach(p=>{
+    const {name, shortlist} = resolveCounselor(p);
+    const who = `${p.first} ${p.last} (#${p.appNo})`;
+    if(name){ get(name).assigned.push(who); }
+    else shortlist.forEach(n=> get(n).considered.push(who));
+  });
+  Object.keys(CMETA).forEach(n=> get(n));           // include counselors not yet carrying anyone
+  const rows = Array.from(map.values());
+  rows.sort((a,b)=> (b.assigned.length-a.assigned.length)
+                 || ((b.assigned.length+b.considered.length)-(a.assigned.length+a.considered.length))
+                 || a.name.localeCompare(b.name));
+  return rows;
+}
+const cLoad = r => r.assigned.length + r.considered.length;
+
+function renderCounselorTiles(all){
+  const TYPES = ["Individual","Marriage","Spiritual Direction"];
+  const demand = {}; TYPES.forEach(t=>demand[t]=0);
+  DATA.forEach(p=>{ if(demand[p.type]!=null) demand[p.type]++; });
+  const capacity = t => Object.values(CMETA).filter(m=>(m.types||[]).includes(t)).length;
+  const engaged = all.filter(r=>cLoad(r)>0).length;
+  const total = all.length;
+
+  const typeTiles = TYPES.map(t=>{
+    const cap = capacity(t);
+    return `<button class="stat" data-ctype="${esc(t)}" aria-pressed="${cstate.type===t}">
+      <div class="n">${demand[t]}</div>
+      <div class="l">${t==="Spiritual Direction"?"Spiritual direction":t} requests</div>
+      <div class="l2">${cap} counselor${cap===1?"":"s"} can serve</div>
+    </button>`;
+  }).join("");
+  const idleTile = `<button class="stat" data-cidle aria-pressed="${cstate.showIdle}">
+      <div class="n">${engaged}<span class="of"> / ${total}</span></div>
+      <div class="l">Counselors engaged</div>
+      <div class="l2">${cstate.showIdle?"showing everyone":"tap to show all"}</div>
+    </button>`;
+
+  const uc = {High:0, Medium:0, Low:0};
+  DATA.forEach(p=>{ if(uc[p.urgency]!=null) uc[p.urgency]++; });
+  const urgTile = `<div class="stat info">
+      <div class="n" style="color:var(--u-high)">${uc.High}</div>
+      <div class="l">Urgent &amp; open</div>
+      <div class="l2">
+        <span class="uc"><i class="udot Medium"></i>${uc.Medium} medium</span>
+        <span class="uc"><i class="udot Low"></i>${uc.Low} low</span>
+      </div>
+    </div>`;
+
+  document.getElementById("csummary").innerHTML = typeTiles + idleTile + urgTile;
+
+  document.querySelectorAll("#csummary [data-ctype]").forEach(b=>{
+    b.onclick = ()=>{ cstate.type = (cstate.type===b.dataset.ctype)?null:b.dataset.ctype; renderCounselors(); };
+  });
+  const idle = document.querySelector("#csummary [data-cidle]");
+  if(idle) idle.onclick = ()=>{ cstate.showIdle=!cstate.showIdle; renderCounselors(); };
+}
+
+function renderCounselors(){
+  const all = counselorStats();
+  renderCounselorTiles(all);
+
+  let rows = all;
+  if(cstate.type){ rows = rows.filter(r=>(metaFor(r.name)?.types||[]).includes(cstate.type)); }
+  else if(!cstate.showIdle){ rows = rows.filter(r=>cLoad(r)>0); }
+
+  const bar = document.getElementById("cfocusBar");
+  if(cstate.type){ bar.classList.add("on");
+    document.getElementById("cfocusLabel").textContent = `counselors who serve ${cstate.type.toLowerCase()}`;
+  } else bar.classList.remove("on");
+  document.getElementById("cfocusClear").onclick = ()=>{ cstate.type=null; renderCounselors(); };
+
+  const maxTotal = Math.max(1, ...all.map(cLoad));
+  document.getElementById("clist").innerHTML = rows.length ? rows.map((r,i)=>{
+    const total = cLoad(r);
+    const aW = (r.assigned.length/maxTotal)*100;
+    const cW = (r.considered.length/maxTotal)*100;
+    const chips = r.assigned.map(w=>`<span class="cchip a">${esc(w)}</span>`).join("");
+    const nums = total===0
+      ? `<span class="avail">available</span>`
+      : `${r.assigned.length?`<span class="assigned"><span class="mk">✦</span>${r.assigned.length} assigned</span>`:``}
+         <span>${r.considered.length} considered</span><span>·&nbsp;${total} total</span>`;
+    const meta = (()=>{ const m=metaFor(r.name); if(!m) return "";
+      const specs=(m.types||[]).map(t=>`<span class="spec">${esc(t)}</span>`).join("");
+      const sv=servesText(m.serves);
+      return (specs||sv) ? `<div class="cmeta">${specs}${sv?`<span class="serves">serves ${sv}</span>`:""}</div>` : ""; })();
+    const people = r.assigned.length
+      ? `<div class="cchips-label">Assigned to ${esc(r.name.split(" ")[0])}</div><div class="cchips">${chips}</div>`
+      : `<div class="cnone">No one assigned yet — still on ${r.considered.length} shortlist${r.considered.length===1?"":"s"}.</div>`;
+    const cid = `cdet-${i}`;
+    return `<div class="crow">
+      <button class="c-summary" aria-expanded="false" aria-controls="${cid}">
+        <span class="cname">${esc(r.name)}</span>
+        <span class="cnums">${nums}</span>
+        <span class="chev" aria-hidden="true">›</span>
+      </button>
+      <div class="cdet" id="${cid}" hidden>
+        ${meta}
+        <div class="cbar"><span class="seg-a" style="width:${aW}%"></span><span class="seg-c" style="width:${cW}%"></span></div>
+        ${people}
+      </div>
+    </div>`;
+  }).join("") : `<div class="empty">No counselors match this view.</div>`;
+}
+
+/* ---------- view switch ---------- */
+function switchView(name){
+  const journey = name==="journey";
+  document.getElementById("view-journey").hidden = !journey;
+  document.getElementById("view-counselors").hidden = journey;
+  document.getElementById("tab-journey").setAttribute("aria-selected", journey);
+  document.getElementById("tab-counselors").setAttribute("aria-selected", !journey);
+  if(!journey) renderCounselors();
+}
+
+/* ---------- director approval ---------- */
+const APPROVE_URL = "/.netlify/functions/approve-application";
+
+function approveHTML(p){
+  if(!isAwaitingApproval(p)) return "";
+  if(!p.recId || !p.counselorIds?.length){
+    return `<div class="approve"><p class="ap-note">Approval runs against live Airtable — connect the proxy to enable it.</p></div>`;
+  }
+  const opts = p.counselorIds.map((id,i)=>{
+    const nm = p.counselors[i] || id;
+    const m = metaFor(nm);
+    const sv = m ? servesText(m.serves) : "";
+    return `<option value="${esc(id)}">${esc(nm)}${sv?` — serves ${esc(sv)}`:""}</option>`;
+  }).join("");
+  return `<div class="approve" data-app="${esc(p.recId)}">
+    <div class="ap-head">Approve &amp; assign a counselor</div>
+    <p class="ap-note">Picks one counselor from the ${p.counselorIds.length} eligible for ${esc(p.type)}.
+      On approval, Airtable emails <b>that counselor only</b>.</p>
+    <div class="ap-row">
+      <select class="ap-sel" aria-label="Counselor">${opts}</select>
+      <button class="btn go ap-go">Approve</button>
+    </div>
+    <p class="ap-msg" hidden></p>
+  </div>`;
+}
+
+async function doApprove(box){
+  const applicationId = box.dataset.app;
+  const sel = box.querySelector(".ap-sel");
+  const btn = box.querySelector(".ap-go");
+  const msg = box.querySelector(".ap-msg");
+  const counselorId = sel.value;
+  const name = sel.options[sel.selectedIndex].text.split(" — ")[0];
+
+  if(!confirm(`Approve this application and assign ${name}?\n\nAirtable will email ${name} right away.`)) return;
+
+  btn.dataset.busy = "1"; btn.textContent = "Approving…"; msg.hidden = true;
+  try{
+    const res = await fetch(APPROVE_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ applicationId, counselorId })
+    });
+    const json = await res.json();
+    if(!res.ok || json.error) throw new Error(json.error || `Failed (${res.status})`);
+    msg.className = "ap-msg ok"; msg.textContent = `Approved — ${name} has been emailed.`; msg.hidden = false;
+    setTimeout(()=>{ if(CONFIG.PROXY_URL) loadLive(); }, 1200);
+  }catch(e){
+    msg.className = "ap-msg bad"; msg.textContent = String(e.message || e); msg.hidden = false;
+  }finally{
+    btn.dataset.busy = ""; btn.textContent = "Approve";
+  }
+}
+
+/* ---------- new application ---------- */
+const CREATE_URL = "/.netlify/functions/create-application";
+function openModal(){
+  document.getElementById("mWarn").hidden = true;
+  document.getElementById("appModal").hidden = false;
+  document.getElementById("f_first").focus();
+}
+function closeModal(){ document.getElementById("appModal").hidden = true; }
+async function submitApp(){
+  const btn = document.getElementById("mSubmit");
+  const warn = document.getElementById("mWarn");
+  const val = id => document.getElementById(id).value.trim();
+  const payload = {
+    firstName: val("f_first"), lastName: val("f_last"), email: val("f_email"),
+    phone: val("f_phone"), type: val("f_type"), urgency: val("f_urgency"),
+    culture: val("f_culture"), costTier: val("f_cost"),
+    reason: val("f_reason"), detail: val("f_detail")
+  };
+  if(!payload.firstName || !payload.lastName || !payload.email){
+    warn.textContent = "First name, last name and email are required."; warn.hidden = false; return;
+  }
+  btn.dataset.busy = "1"; btn.textContent = "Creating…";
+  try{
+    const res = await fetch(CREATE_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if(!res.ok || json.error) throw new Error(json.error || `Failed (${res.status})`);
+    closeModal();
+    ["f_first","f_last","f_email","f_phone","f_reason","f_detail"].forEach(id=>document.getElementById(id).value="");
+    if(CONFIG.PROXY_URL) loadLive();
+  }catch(e){
+    warn.textContent = String(e.message || e); warn.hidden = false;
+  }finally{
+    btn.dataset.busy = ""; btn.textContent = "Create application";
+  }
+}
+
+/* ---------- boot ---------- */
+function paintAll(){
+  renderSummary(); renderLegend(); renderControls(); renderRoster();
+  if(!document.getElementById("view-counselors").hidden) renderCounselors();
+  document.getElementById("stampCount").textContent = DATA.length;
+  document.getElementById("stampTime").textContent =
+    new Date().toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+}
+async function loadLive(){
+  const btn = document.getElementById("refreshBtn"); btn.dataset.busy = "1";
+  try{
+    const res = await fetch(CONFIG.PROXY_URL);
+    if(!res.ok) throw new Error(res.status);
+    const json = await res.json();
+    DATA = (json.records||json).map(mapAirtableRecord).filter(p=>p.appNo!=null);
+    if(json.counselors) CMETA = {...COUNSELOR_META, ...buildMeta(json.counselors)};
+    document.getElementById("dataMode").textContent = "Live from Airtable";
+    paintAll();
+  }catch(e){
+    document.getElementById("dataMode").textContent = "Preview · showing last snapshot";
+    DATA = SNAPSHOT.slice(); paintAll();
+  }finally{ btn.dataset.busy = ""; }
+}
+function init(){
+  document.getElementById("newAppBtn").onclick = openModal;
+  document.getElementById("mClose").onclick = closeModal;
+  document.getElementById("mCancel").onclick = closeModal;
+  document.getElementById("mSubmit").onclick = submitApp;
+  document.getElementById("appModal").addEventListener("click", e=>{
+    if(e.target.id==="appModal") closeModal();
+  });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeModal(); });
+  document.getElementById("tab-journey").onclick = ()=>switchView("journey");
+  document.getElementById("tab-counselors").onclick = ()=>switchView("counselors");
+  document.getElementById("focusClear").onclick = ()=>setFocus("all");
+  document.getElementById("roster").addEventListener("click", e=>{
+    const go = e.target.closest(".ap-go");
+    if(go){ doApprove(go.closest(".approve")); return; }
+    const gh = e.target.closest(".grp-head");
+    if(gh){
+      const o = gh.getAttribute("aria-expanded")==="true";
+      gh.setAttribute("aria-expanded", String(!o));
+      const b = document.getElementById(gh.getAttribute("aria-controls"));
+      if(b) b.hidden = o;
+      return;
+    }
+    const btn = e.target.closest(".p-summary"); if(!btn) return;
+    const open = btn.getAttribute("aria-expanded")==="true";
+    btn.setAttribute("aria-expanded", String(!open));
+    const det = document.getElementById(btn.getAttribute("aria-controls"));
+    if(det) det.hidden = open;
+  });
+  document.getElementById("clist").addEventListener("click", e=>{
+    const b = e.target.closest(".c-summary"); if(!b) return;
+    const open = b.getAttribute("aria-expanded")==="true";
+    b.setAttribute("aria-expanded", String(!open));
+    const d = document.getElementById(b.getAttribute("aria-controls"));
+    if(d) d.hidden = open;
+  });
+  if(CONFIG.PROXY_URL){
+    const btn = document.getElementById("refreshBtn");
+    btn.hidden = false; btn.onclick = loadLive; loadLive();
+  }else{ DATA = SNAPSHOT.slice(); paintAll(); }
+}
+init();
+</script>
+</body>
+</html>
