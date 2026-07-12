@@ -252,6 +252,12 @@
   .approve .btn.go:disabled,.ap-sel:disabled{opacity:.55;cursor:not-allowed}
   .approve .btn.go:disabled:hover{background:#B03A6E}
   .approve .btn.go:hover{background:#94305C}
+  .ap-rate{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:#8E5573;
+    line-height:1.45;margin:0 0 10px}
+  .ap-rate b{color:#B03A6E;font-weight:600}
+  .ap-cult{flex:none;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:#fff;background:#B03A6E;border-radius:999px;padding:2px 8px;margin-top:1px}
+  .tag.cult{color:var(--pine-deep);border-color:#cfe0da;background:#eef4f1}
   .ap-msg{font-size:12.5px;margin:10px 0 0;padding:7px 10px;border-radius:8px}
   .ap-msg.ok{color:var(--pine-deep);background:#eef4f1;border:1px solid #cfe0da}
   .ap-msg.bad{color:var(--u-high);background:#fbf0ee;border:1px solid #e8c0b9}
@@ -522,6 +528,7 @@ function eligibleFor(type){
     .map(([name,m]) => ({ id:m.id, name, types:m.types||[], serves:m.serves||[], free:!!m.free }))
     .sort((a,b)=> a.name.localeCompare(b.name));
 }
+function cultureLabel(c){ return c==="2nd" ? "2nd culture" : "1st culture"; }
 function servesText(a){ const s=(a||[]).map(x=>String(x).toLowerCase());
   if(s.length>=2) return "men & women"; if(s.length===1) return s[0]; return ""; }
 
@@ -638,6 +645,7 @@ function renderRoster(){
       <div class="p-detail" id="${did}" hidden>
         <div class="p-meta">
           <span class="tag type">${esc(p.type)}</span>
+          <span class="tag cult">${esc(cultureLabel(p.culture))}</span>
           <span class="tag u-${esc(p.urgency)}"><span class="u-dot"></span>${esc(p.urgency)} urgency</span>
           ${counselorTag(p)}
           <span class="tag">${cost}</span>
@@ -846,8 +854,10 @@ function approveHTML(p){
   if(!list.length) return "";
 
   const tier = deriveTier(p.type, p.culture) ?? p.yourCost ?? 0;
+  const cult = cultureLabel(p.culture);
   const opts = list.map(c=>{
-    const cost = c.free ? "free" : `$${tier}`;      // the $0 flag decides
+    // cost always states which culture's rate it is, so it can be sanity-checked
+    const cost = c.free ? "free" : `$${tier} (${cult} rate)`;
     const sv = servesText(c.serves);
     const bits = [cost, sv].filter(Boolean).join(" · ");
     return `<option value="${esc(c.id)}">${esc(c.name)} — ${esc(bits)}</option>`;
@@ -861,6 +871,11 @@ function approveHTML(p){
 
   return `<div class="approve" data-app="${esc(p.recId)}">
     <div class="ap-head">Approve &amp; assign a counselor</div>
+    <div class="ap-rate">
+      <span class="ap-cult">${esc(cult)}</span>
+      <span>${esc(p.first)} is <b>${esc(cult)}</b> — the ${esc(p.type)} rate is <b>$${tier}</b>
+        if the counselor charges, $0 if they don't.</span>
+    </div>
     <p class="ap-note">${note}</p>
     <div class="ap-row">
       <select class="ap-sel" aria-label="Counselor" ${LIVE?"":"disabled"}>${opts}</select>
