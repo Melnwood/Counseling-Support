@@ -252,7 +252,6 @@
   .approve .btn.go:disabled,.ap-sel:disabled{opacity:.55;cursor:not-allowed}
   .approve .btn.go:disabled:hover{background:#B03A6E}
   .approve .btn.go:hover{background:#94305C}
-  .ap-stale{font-size:11.5px;color:#8E5573;margin:10px 0 0;line-height:1.4;font-style:italic}
   .ap-msg{font-size:12.5px;margin:10px 0 0;padding:7px 10px;border-radius:8px}
   .ap-msg.ok{color:var(--pine-deep);background:#eef4f1;border:1px solid #cfe0da}
   .ap-msg.bad{color:var(--u-high);background:#fbf0ee;border:1px solid #e8c0b9}
@@ -842,10 +841,6 @@ function approveHTML(p){
   }
   if(!list.length) return "";
 
-  // Anyone qualified now but NOT on the application's frozen intake list.
-  const stored = new Set(p.counselorIds||[]);
-  const added  = list.filter(c=>!stored.has(c.id));
-
   const opts = list.map(c=>{
     // lead with the type they were asked for, then their other specialties
     const others = c.types.filter(t=>t!==p.type);
@@ -861,11 +856,6 @@ function approveHTML(p){
     : `Preview — deploy to enable. Live, this picks from the ${list.length} counselor${list.length===1?"":"s"}
        qualified for <b>${esc(p.type)}</b> and emails <b>that counselor only</b>.`;
 
-  const stale = added.length
-    ? `<p class="ap-stale">Includes ${added.map(c=>esc(c.name)).join(", ")}, who joined after this application came in
-       — the list Airtable saved at intake is missing ${added.length===1?"them":"them"}.</p>`
-    : "";
-
   return `<div class="approve" data-app="${esc(p.recId)}">
     <div class="ap-head">Approve &amp; assign a counselor</div>
     <p class="ap-note">${note}</p>
@@ -873,7 +863,6 @@ function approveHTML(p){
       <select class="ap-sel" aria-label="Counselor" ${LIVE?"":"disabled"}>${opts}</select>
       <button class="btn go ap-go" ${LIVE?"":"disabled"}>Approve</button>
     </div>
-    ${stale}
     <p class="ap-msg" hidden></p>
   </div>`;
 }
