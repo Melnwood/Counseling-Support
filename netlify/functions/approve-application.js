@@ -47,8 +47,8 @@ const D = {
   status:    "fldU92VnWQlVmIu0D",   // singleSelect: Approved
   type:      "fldnYCKihlAXnTP1z",   // singleSelect: Individual | Marriage | Spiritual Direction
   appLink:   "fld09Otf7VCm6d8QF",   // link -> Applications
-  counselor: "fldNvaM3N5lIhi1T0",   // link -> Counselors (exactly one)
-  date:      "fldI1SAcMlpX0DL1G"
+  counselor: "fldNvaM3N5lIhi1T0"    // link -> Counselors (exactly one)
+  // NOTE: "Submission Date" (fldI1SAcMlpX0DL1G) is a FORMULA — never write it.
 };
 
 exports.handler = async (event) => {
@@ -106,8 +106,7 @@ exports.handler = async (event) => {
       [D.last]:      f[A.last]  || "",
       [D.status]:    "Approved",
       [D.appLink]:   [applicationId],
-      [D.counselor]: [counselorId],
-      [D.date]:      new Date().toISOString().slice(0, 10)
+      [D.counselor]: [counselorId]
     };
     if (type) fields[D.type] = type;
 
