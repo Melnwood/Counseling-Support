@@ -657,11 +657,16 @@ function renderRoster(){
     </article>`;
   };
 
+  // How many groups actually have people in them right now?
+  const filled = GROUPS.filter(g=>rows.some(p=>groupKeyFor(p)===g.key)).length;
   let openedFirst = false;
   roster.innerHTML = GROUPS.map(g=>{
     const gr = sortRows(rows.filter(p=>groupKeyFor(p)===g.key));
     if(!gr.length) return "";
-    const open = !openedFirst; openedFirst = true;
+    // Drilling in from a tile, or a short list: open everything, so the count
+    // on the tile always matches the people you can actually see.
+    const openAll = state.focus !== "all" || state.type !== "All" || rows.length <= 6 || filled === 1;
+    const open = openAll || !openedFirst; openedFirst = true;
     const bid = `grp-${g.key}`;
     return `<section class="grp-sec">
       <button class="grp-head" aria-expanded="${open}" aria-controls="${bid}">
