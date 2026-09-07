@@ -23,6 +23,7 @@
  *   AIRTABLE_TOKEN    — PAT with data.records:read + data.records:write
  *   AIRTABLE_BASE_ID  — defaults to appbfOtX0IyCPV9T1
  */
+const { verifyRequest } = require("./lib/auth");
 const BASE  = process.env.AIRTABLE_BASE_ID || "appbfOtX0IyCPV9T1";
 const TOKEN = process.env.AIRTABLE_TOKEN;
 
@@ -55,6 +56,9 @@ exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return respond(204, {});
   if (event.httpMethod !== "POST")    return respond(405, { error: "Use POST" });
   if (!TOKEN) return respond(500, { error: "Missing AIRTABLE_TOKEN" });
+
+  const gate = await verifyRequest(event);
+  if (!gate.ok) return gate.res;
 
   let b;
   try { b = JSON.parse(event.body || "{}"); }
@@ -148,7 +152,7 @@ function respond(code, body) {
       "Content-Type": "application/json",
       "Cache-Control": "no-store",
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
       "Access-Control-Allow-Methods": "POST, OPTIONS"
     },
     body: JSON.stringify(body)

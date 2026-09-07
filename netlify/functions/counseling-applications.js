@@ -11,6 +11,7 @@
  * Optional:
  *   AIRTABLE_BASE_ID — defaults to appbfOtX0IyCPV9T1
  */
+const { verifyRequest, cors } = require("./lib/auth");
 const BASE  = process.env.AIRTABLE_BASE_ID || "appbfOtX0IyCPV9T1";
 const TOKEN = process.env.AIRTABLE_TOKEN;
 
@@ -35,7 +36,12 @@ const APP_FIELDS = [
   "fldd3dQ2vqg3wsupF", // Transfer Has Been Made
   "fldKD4EADERIGsoLN", // Submitted date
   "fldpH7piGlH759TxR", // Amount to withdraw from staff account
+  "fld6rI7wOxu3tlekF", // Additional Notes (short reason)
+  "fldcl3kZDahNwDiH0", // Why looking for a new counselor
+  "fldOhbUFKlJnriCW0", // Spouse First Name
+  "fldIRkQcKS7cU40QY", // Phone
   "fldFFxDoF1wCHbUwv", // Culture (1st / 2nd)
+  "fldPbY6QcZoVQvhhp", // Country / Region
   "fldqEjwvlpwPodIAW", // Archived
   "flduoyDtiNfF5dnG4", // Stage Override
   COUNSELOR_LINK_FIELD
@@ -62,7 +68,11 @@ async function fetchAll(path, params) {
   return records;
 }
 
-exports.handler = async () => {
+exports.handler = async (event) => {
+  if (event && event.httpMethod === "OPTIONS") return { statusCode: 204, headers: cors(), body: "" };
+  const gate = await verifyRequest(event);
+  if (!gate.ok) return gate.res;
+
   try {
     if (!TOKEN) return respond(500, { error: "Missing AIRTABLE_TOKEN environment variable" });
 

@@ -16,6 +16,7 @@
  *   AIRTABLE_TOKEN    — PAT with data.records:write on the base
  *   AIRTABLE_BASE_ID  — defaults to appbfOtX0IyCPV9T1
  */
+const { verifyRequest } = require("./lib/auth");
 const BASE  = process.env.AIRTABLE_BASE_ID || "appbfOtX0IyCPV9T1";
 const TOKEN = process.env.AIRTABLE_TOKEN;
 const APPLICATIONS_TABLE = "tbl8JpwXcI1DEvxof";
@@ -30,6 +31,7 @@ const F = {
   type:     "fldeFGYqZkNO3EttZ",  // Individual | Marriage | Spiritual Direction
   urgency:  "fld61ukbkJ58h2kVD",  // Low | Medium | High
   culture:  "fldFFxDoF1wCHbUwv",  // 1st | 2nd
+  country:  "fldPbY6QcZoVQvhhp",  // Country / Region
   date:     "fldzWmA9BX4E02S3m"   // Date submitted
 };
 
@@ -74,6 +76,9 @@ exports.handler = async (event) => {
   if (event.httpMethod !== "POST")    return respond(405, { error: "Use POST" });
   if (!TOKEN) return respond(500, { error: "Missing AIRTABLE_TOKEN" });
 
+  const gate = await verifyRequest(event);
+  if (!gate.ok) return gate.res;
+
   let b;
   try { b = JSON.parse(event.body || "{}"); }
   catch { return respond(400, { error: "Invalid JSON body" }); }
@@ -114,6 +119,7 @@ exports.handler = async (event) => {
   if (b.type)    fields[F.type]    = b.type;
   if (b.urgency) fields[F.urgency] = b.urgency;
   if (b.culture) fields[F.culture] = b.culture;
+  if (b.country)  fields[F.country]  = String(b.country).slice(0,120);
 
   // Exactly one cost checkbox — this is what the intake email keys off.
   fields[COST_CHECKBOX[costKey]] = true;
@@ -151,7 +157,7 @@ function respond(code, body) {
       "Content-Type": "application/json",
       "Cache-Control": "no-store",
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
       "Access-Control-Allow-Methods": "POST, OPTIONS"
     },
     body: JSON.stringify(body)

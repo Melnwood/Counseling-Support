@@ -4,12 +4,13 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Counseling Care Journey</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJDYXJlIEpvdXJuZXkiPgogIDxyZWN0IHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgcng9IjE1IiBmaWxsPSIjMkY1RTUyIi8+CiAgPCEtLSBhIGpvdXJuZXkgcmlzaW5nIHRocm91Z2ggdGhyZWUgc3RlcHM7IHRoZSBsYXN0IG9uZSBpcyB3aGVyZSB0aGV5IGFyZSBub3cgLS0+CiAgPHBhdGggZD0iTTE2IDQ2IEwzMiAzMiBMNDggMTgiIHN0cm9rZT0iI0Y2RjNFQyIgc3Ryb2tlLXdpZHRoPSI0IgogICAgICAgIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgb3BhY2l0eT0iLjUiIGZpbGw9Im5vbmUiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjQ2IiByPSI2IiBmaWxsPSIjRjZGM0VDIi8+CiAgPGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iNiIgZmlsbD0iI0Y2RjNFQyIvPgogIDxjaXJjbGUgY3g9IjQ4IiBjeT0iMTgiIHI9IjkiIGZpbGw9IiNDMDg3MkIiLz4KICA8Y2lyY2xlIGN4PSI0OCIgY3k9IjE4IiByPSIzLjUiIGZpbGw9IiNGRUZDRjgiLz4KPC9zdmc+Cg==" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJDYXJlIEpvdXJuZXkiPgogIDxyZWN0IHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgcng9IjE1IiBmaWxsPSIjMkY1RTUyIi8+CiAgPHBhdGggZD0iTTMyIDQ2IEMgMTggMzcsIDE2IDI2LCAyNCAyMiBDIDI5IDE5LjUsIDMyIDIzLCAzMiAyNSBDIDMyIDIzLCAzNSAxOS41LCA0MCAyMiBDIDQ4IDI2LCA0NiAzNywgMzIgNDYgWiIKICAgICAgICBmaWxsPSJub25lIiBzdHJva2U9IiNGNkYzRUMiIHN0cm9rZS13aWR0aD0iMy40IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=" />
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <meta name="theme-color" content="#2F5E52" />
 <meta name="apple-mobile-web-app-title" content="Care Journey" />
+<script src="https://accounts.google.com/gsi/client" async></script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -159,6 +160,14 @@
   .p-status .now{color:var(--ink);font-weight:600}
   .p-status .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);flex:none}
 
+  /* two-column detail: progress box (left) + application (right) */
+  .p-cols{display:grid;grid-template-columns:1fr 2fr;gap:16px;align-items:start;margin-top:14px}
+  .p-progress{background:var(--oat);border:1px solid var(--line);border-radius:12px;padding:14px 15px;min-width:0}
+  .p-progress .p-status{margin:0 0 12px}
+  .p-appcol{min-width:0}
+  .p-appcol .p-meta{margin-top:0}
+  .p-appcol .appx{margin-top:12px}
+  @media (max-width:700px){ .p-cols{grid-template-columns:1fr;gap:12px} }
   /* vertical step track — reads cleanly on a phone */
   .vtrack{margin-top:4px}
   .vstep{display:flex;gap:13px}
@@ -306,6 +315,25 @@
     .p-detail{padding:4px 15px 18px}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  .appx{margin-top:16px;border:1px solid var(--line);border-radius:12px;background:var(--oat);overflow:hidden}
+  .appx-empty{margin-top:16px;padding:12px 15px;border:1px dashed var(--line);border-radius:12px;
+    background:var(--paper);color:var(--ink-soft);font-size:12.5px;font-style:italic}
+  .appx-sum{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;
+    padding:11px 15px;font-family:"Fraunces",serif;font-size:15px;font-weight:500;color:var(--pine-deep);
+    background:#eef4f1;border-bottom:1px solid var(--line)}
+  .appx-sum::-webkit-details-marker{display:none}
+  .appx:not([open]) .appx-sum{border-bottom:none}
+  .appx-chev{color:var(--pine);font-size:17px;transition:transform .15s;display:inline-block}
+  .appx[open] .appx-chev{transform:rotate(90deg)}
+  .appx-hint{font-family:"Inter";font-size:11.5px;font-weight:400;color:var(--ink-soft);margin-left:auto}
+  .appx-body{padding:4px 15px 15px}
+  .appx-lbl{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);margin:14px 0 5px}
+  .appx-text{font-size:14px;color:var(--ink);line-height:1.55;margin:0;white-space:pre-wrap}
+  .appx-facts{display:flex;flex-direction:column;gap:6px;margin-top:2px}
+  .appx-fact{font-size:13px;color:var(--ink-soft)}
+  .appx-fact b{color:var(--ink);font-weight:600;margin-right:6px}
+  .appx-fact a{color:var(--pine);text-decoration:none}
+  .appx-fact a:hover{text-decoration:underline}
   .manage{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
     margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
   .manage-stage{display:flex;align-items:center;gap:9px}
@@ -328,9 +356,32 @@
   .manage-arch.restore{color:var(--pine);font-weight:500}
   .manage-arch:disabled{opacity:.5;cursor:not-allowed;text-decoration:none}
   .manage-msg{flex-basis:100%;font-size:12px;color:var(--u-high);margin:0}
+  .gate{position:fixed;inset:0;z-index:100;background:var(--oat);display:flex;
+    align-items:center;justify-content:center;padding:24px}
+  .gate-card{background:var(--paper);border:1px solid var(--line);border-radius:18px;
+    box-shadow:0 24px 60px -24px rgba(34,48,44,.4);padding:38px 34px;max-width:400px;width:100%;text-align:center}
+  .gate-mark{width:56px;height:56px;border-radius:14px;background:var(--pine);color:#F6F3EC;
+    display:grid;place-items:center;font-size:28px;margin:0 auto 18px}
+  .gate-title{font-family:"Fraunces",serif;font-weight:500;font-size:24px;margin:0}
+  .gate-sub{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--pine);
+    font-weight:600;margin:6px 0 20px}
+  .gate-msg{font-size:14px;color:var(--ink-soft);margin:0 0 20px;line-height:1.5}
+  .gate-btn{display:flex;justify-content:center;min-height:44px}
+  .gate-fine{font-size:11.5px;color:var(--ink-soft);margin:22px 0 0;line-height:1.5;opacity:.85}
 </style>
 </head>
 <body>
+<div class="gate" id="gate" hidden>
+  <div class="gate-card">
+    <div class="gate-mark">♥</div>
+    <h1 class="gate-title">Counseling Care Journey</h1>
+    <p class="gate-sub">Member Care · Josiah Venture</p>
+    <p class="gate-msg" id="gateMsg">Sign in with your Josiah Venture account to continue.</p>
+    <div id="gbtn" class="gate-btn"></div>
+    <p class="gate-fine">Access is limited to authorized member-care staff. This page holds confidential counseling records.</p>
+  </div>
+</div>
+
 <div class="wrap">
   <header class="masthead">
     <div>
@@ -417,6 +468,7 @@
         <label>Culture
           <select id="f_culture"><option value="1st">1st culture</option><option value="2nd">2nd culture</option></select>
         </label>
+        <label>Country / region <input id="f_country" placeholder="e.g. Czechia" /></label>
         <label>Staff share
           <div class="costbox"><span id="f_costview">$180</span>
             <span class="costwhy" id="f_costwhy">Individual · 1st culture</span></div>
@@ -443,9 +495,19 @@
 <script>
 const CONFIG = {
   PROXY_URL: "/.netlify/functions/counseling-applications",
+  GOOGLE_CLIENT_ID: "",   // paste your Google OAuth Client ID here
+  ALLOWED_DOMAIN: "josiahventure.com",
   BASE_ID:  "appbfOtX0IyCPV9T1",
   TABLE_ID: "tbl8JpwXcI1DEvxof"
 };
+
+let ID_TOKEN = null;                       // Google sign-in token for this session
+const needAuth = () => !!(CONFIG.PROXY_URL && CONFIG.GOOGLE_CLIENT_ID);
+function authHeaders(extra){
+  const h = Object.assign({}, extra||{});
+  if(ID_TOKEN) h["Authorization"] = "Bearer " + ID_TOKEN;
+  return h;
+}
 const FIELD = {
   first:"fldxMDtlRzzEglkYn", last:"fldAhAxq1UK2WjCSu", email:"fld2ICZrCti8r21tw",
   appNo:"fldPxsR3bb4o4fPuZ", type:"fldeFGYqZkNO3EttZ", urgency:"fld61ukbkJ58h2kVD",
@@ -453,7 +515,13 @@ const FIELD = {
   matched:"fldSpxQ8mgzbxUlrk", transfer:"fldd3dQ2vqg3wsupF",
   submitted:"fldKD4EADERIGsoLN", yourCost:"fldpH7piGlH759TxR",
   counselors:"fldFsMIiavyx2UYfE",
+  reason:"fld6rI7wOxu3tlekF",
+  why:"fldcl3kZDahNwDiH0",
+  hadBefore:"fldSpxQ8mgzbxUlrk",
+  spouse:"fldOhbUFKlJnriCW0",
+  phone:"fldIRkQcKS7cU40QY",
   culture:"fldFFxDoF1wCHbUwv",
+  country:"fldPbY6QcZoVQvhhp",
   archived:"fldqEjwvlpwPodIAW",
   stageOverride:"flduoyDtiNfF5dnG4"
 };
@@ -535,6 +603,12 @@ function mapAirtableRecord(r){
     matched: sel(f[FIELD.matched])==="Yes", transfer: !!f[FIELD.transfer],
     submitted: f[FIELD.submitted]||"", yourCost: f[FIELD.yourCost]||0,
     culture: sel(f[FIELD.culture])||"1st",
+    country: f[FIELD.country]||"",
+    reason: f[FIELD.reason]||"",
+    why: f[FIELD.why]||"",
+    hadBefore: sel(f[FIELD.hadBefore])||"",
+    spouse: f[FIELD.spouse]||"",
+    phone: f[FIELD.phone]||"",
     archived: !!f[FIELD.archived],
     stageOverride: sel(f[FIELD.stageOverride])||"",
     counselors: Array.isArray(list) ? list.map(v=> (v&&v.name) ? v.name : v) : [],
@@ -616,9 +690,9 @@ function renderSummary(){
   const total = base.length;
   const cards = [
     {n:total, l:"People in process", focus:"all"},
-    {n:DATA.filter(FOCUS.awaiting.test).length, l:"Awaiting your approval", focus:"awaiting", flag:true},
-    {n:DATA.filter(FOCUS.finding.test).length, l:"Approved · finding counselor", focus:"finding"},
-    {n:DATA.filter(FOCUS.matched.test).length, l:"Matched · arranging time", focus:"matched"},
+    {n:base.filter(FOCUS.awaiting.test).length, l:"Awaiting your approval", focus:"awaiting", flag:true},
+    {n:base.filter(FOCUS.finding.test).length, l:"Approved · finding counselor", focus:"finding"},
+    {n:base.filter(FOCUS.matched.test).length, l:"Matched · arranging time", focus:"matched"},
     {n:base.filter(FOCUS.confirmed.test).length, l:"Schedule confirmed +", focus:"confirmed"}
   ];
   document.getElementById("summary").innerHTML = cards.map(c=>`
@@ -704,15 +778,23 @@ function renderRoster(){
         <span class="chev" aria-hidden="true">›</span>
       </button>
       <div class="p-detail" id="${did}" hidden>
-        <div class="p-meta">
-          <span class="tag type">${esc(p.type)}</span>
-          <span class="tag cult">${esc(cultureLabel(p.culture))}</span>
-          <span class="tag u-${esc(p.urgency)}"><span class="u-dot"></span>${esc(p.urgency)} urgency</span>
-          ${counselorTag(p)}
-          <span class="tag">${cost}</span>
+        <div class="p-cols">
+          <div class="p-progress">
+            <div class="p-status"><span class="dot"></span><span>Now: <span class="now">${sentence}</span></span></div>
+            ${stepperHTML(denied?0:idx)}
+          </div>
+          <div class="p-appcol">
+            <div class="p-meta">
+              <span class="tag type">${esc(p.type)}</span>
+              <span class="tag cult">${esc(cultureLabel(p.culture))}</span>
+              ${p.country?`<span class="tag">${esc(p.country)}</span>`:""}
+              <span class="tag u-${esc(p.urgency)}"><span class="u-dot"></span>${esc(p.urgency)} urgency</span>
+              ${counselorTag(p)}
+              <span class="tag">${cost}</span>
+            </div>
+            ${applicationHTML(p)}
+          </div>
         </div>
-        <div class="p-status"><span class="dot"></span><span>Now: <span class="now">${sentence}</span></span></div>
-        ${stepperHTML(denied?0:idx)}
         ${approveHTML(p)}
         ${manageHTML(p)}
       </div>
@@ -965,7 +1047,7 @@ async function doApprove(box){
   btn.dataset.busy = "1"; btn.textContent = "Approving…"; msg.hidden = true;
   try{
     const res = await fetch(APPROVE_URL, {
-      method:"POST", headers:{"Content-Type":"application/json"},
+      method:"POST", headers:authHeaders({"Content-Type":"application/json"}),
       body: JSON.stringify({ applicationId, counselorId })
     });
     const json = await res.json();
@@ -977,6 +1059,34 @@ async function doApprove(box){
   }finally{
     btn.dataset.busy = ""; btn.textContent = "Approve";
   }
+}
+
+/* ---------- application detail (visible while the case is live) ---------- */
+function fmtPhone(v){ if(!v) return ""; const s=String(v); return s.startsWith("+")?s:("+"+s); }
+function applicationHTML(p){
+  const why = p.why || "";
+  const reason = (p.reason && p.reason !== why) ? p.reason : "";
+  const hasContent = why || reason || p.email || p.phone || p.spouse || p.country;
+  if(!hasContent){
+    return `<div class="appx-empty">Application details were removed when this case was closed out. The anonymous record is kept below.</div>`;
+  }
+  const blocks = [];
+  if(why)    blocks.push(`<div class="appx-lbl">Why they reached out</div><p class="appx-text">${esc(why)}</p>`);
+  if(reason) blocks.push(`<div class="appx-lbl">Additional notes</div><p class="appx-text">${esc(reason)}</p>`);
+  const facts = [];
+  facts.push(`<span class="appx-fact"><b>Type</b> ${esc(p.type)} · ${esc(cultureLabel(p.culture))}</span>`);
+  facts.push(`<span class="appx-fact"><b>Urgency</b> ${esc(p.urgency)}</span>`);
+  if(p.hadBefore) facts.push(`<span class="appx-fact"><b>Counseling before?</b> ${esc(p.hadBefore)}</span>`);
+  if(p.spouse)    facts.push(`<span class="appx-fact"><b>Spouse</b> ${esc(p.spouse)}</span>`);
+  if(p.country)   facts.push(`<span class="appx-fact"><b>Region</b> ${esc(p.country)}</span>`);
+  if(p.email)     facts.push(`<span class="appx-fact"><b>Email</b> <a href="mailto:${esc(p.email)}">${esc(p.email)}</a></span>`);
+  if(p.phone)     facts.push(`<span class="appx-fact"><b>Phone</b> ${esc(fmtPhone(p.phone))}</span>`);
+  if(p.submitted) facts.push(`<span class="appx-fact"><b>Applied</b> ${fmtDate(p.submitted)}</span>`);
+  blocks.push(`<div class="appx-lbl">Details</div><div class="appx-facts">${facts.join("")}</div>`);
+  return `<details class="appx" open>
+    <summary class="appx-sum"><span class="appx-chev">›</span> Application <span class="appx-hint">#${p.appNo} — tap to hide</span></summary>
+    <div class="appx-body">${blocks.join("")}</div>
+  </details>`;
 }
 
 /* ---------- manage: stage + archive (one quiet footer) ---------- */
@@ -1018,7 +1128,7 @@ async function setStage(box){
   const stage = sel.value;
   sel.disabled = true; if(msg) msg.hidden = true;
   try{
-    const res = await fetch(STAGE_URL, { method:"POST", headers:{"Content-Type":"application/json"},
+    const res = await fetch(STAGE_URL, { method:"POST", headers:authHeaders({"Content-Type":"application/json"}),
       body: JSON.stringify({ applicationId, stage }) });
     const json = await res.json();
     if(!res.ok || json.error) throw new Error(json.error || `Failed (${res.status})`);
@@ -1034,11 +1144,15 @@ async function doArchive(box, restore){
   const applicationId = box.dataset.app;
   const btn = box.querySelector(".manage-arch");
   const msg = box.querySelector(".manage-msg");
-  if(!restore && !confirm("Archive this request? It moves out of the active view but stays in Airtable.")) return;
+  if(!restore && !confirm(
+    "Close out and archive this person?\n\n"+
+    "This permanently removes their name, email, phone, and reason, and keeps an "+
+    "anonymous record (type, culture, urgency, counselor, cost, dates, region) for "+
+    "reporting. It cannot be undone.")) return;
   btn.dataset.busy="1"; const label=btn.textContent; btn.textContent = restore?"Restoring…":"Archiving…";
   if(msg) msg.hidden=true;
   try{
-    const res = await fetch(ARCHIVE_URL, { method:"POST", headers:{"Content-Type":"application/json"},
+    const res = await fetch(ARCHIVE_URL, { method:"POST", headers:authHeaders({"Content-Type":"application/json"}),
       body: JSON.stringify({ applicationId, archived: !restore }) });
     const json = await res.json();
     if(!res.ok || json.error) throw new Error(json.error || `Failed (${res.status})`);
@@ -1094,12 +1208,12 @@ async function submitApp(){
   btn.dataset.busy = "1"; btn.textContent = "Creating…";
   try{
     const res = await fetch(CREATE_URL, {
-      method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)
+      method:"POST", headers:authHeaders({"Content-Type":"application/json"}), body: JSON.stringify(payload)
     });
     const json = await res.json();
     if(!res.ok || json.error) throw new Error(json.error || `Failed (${res.status})`);
     closeModal();
-    ["f_first","f_last","f_email","f_phone","f_reason","f_detail"].forEach(id=>document.getElementById(id).value="");
+    ["f_first","f_last","f_email","f_phone","f_reason","f_detail","f_country"].forEach(id=>document.getElementById(id).value="");
     if(CONFIG.PROXY_URL) loadLive();
   }catch(e){
     warn.textContent = String(e.message || e); warn.hidden = false;
@@ -1120,7 +1234,11 @@ function paintAll(){
 async function loadLive(){
   const btn = document.getElementById("refreshBtn"); btn.dataset.busy = "1";
   try{
-    const res = await fetch(CONFIG.PROXY_URL);
+    const res = await fetch(CONFIG.PROXY_URL, { headers: authHeaders() });
+    if(res.status===401 || res.status===403){
+      const j = await res.json().catch(()=>({}));
+      signedOut(j.error); return;
+    }
     if(!res.ok) throw new Error(res.status);
     const json = await res.json();
     DATA = (json.records||json).map(mapAirtableRecord).filter(p=>p.appNo!=null);
@@ -1180,10 +1298,43 @@ function init(){
     const d = document.getElementById(b.getAttribute("aria-controls"));
     if(d) d.hidden = open;
   });
-  if(CONFIG.PROXY_URL){
+  if(needAuth()){
+    startAuth();                       // must sign in before any data loads
+  }else if(CONFIG.PROXY_URL){
     const btn = document.getElementById("refreshBtn");
     btn.hidden = false; btn.onclick = loadLive; loadLive();
-  }else{ DATA = SNAPSHOT.slice(); paintAll(); }
+  }else{ DATA = SNAPSHOT.slice(); paintAll(); }   // local preview / snapshot
+}
+
+/* ---------- Google sign-in gate ---------- */
+function startAuth(){
+  document.getElementById("gate").hidden = false;
+  const render = ()=>{
+    if(!(window.google && google.accounts && google.accounts.id)){ return setTimeout(render, 150); }
+    google.accounts.id.initialize({
+      client_id: CONFIG.GOOGLE_CLIENT_ID,
+      hd: CONFIG.ALLOWED_DOMAIN,
+      callback: onSignIn,
+      auto_select: true
+    });
+    google.accounts.id.renderButton(document.getElementById("gbtn"),
+      { theme:"filled_black", size:"large", shape:"pill", text:"signin_with" });
+    google.accounts.id.prompt();
+  };
+  render();
+}
+function onSignIn(resp){
+  ID_TOKEN = resp.credential;
+  document.getElementById("gate").hidden = true;
+  const btn = document.getElementById("refreshBtn");
+  btn.hidden = false; btn.onclick = loadLive;
+  loadLive();
+}
+function signedOut(msg){                 // called when a function rejects the token
+  ID_TOKEN = null;
+  document.getElementById("gateMsg").textContent = msg || "Your session ended — please sign in again.";
+  document.getElementById("gate").hidden = false;
+  if(window.google && google.accounts) google.accounts.id.prompt();
 }
 init();
 </script>
