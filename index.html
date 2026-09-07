@@ -432,17 +432,27 @@ const FIELD = {
   matched:"fldSpxQ8mgzbxUlrk", transfer:"fldd3dQ2vqg3wsupF",
   submitted:"fldKD4EADERIGsoLN", yourCost:"fldpH7piGlH759TxR",
   counselors:"fldFsMIiavyx2UYfE",
-  culture:"fldFFxDoF1wCHbUwv"
+  culture:"fldFFxDoF1wCHbUwv",
+  archived:"fldqEjwvlpwPodIAW",
+  stageOverride:"flduoyDtiNfF5dnG4"
 };
 const STEPS = [
-  {key:"submitted", label:"Submitted"}, {key:"approved", label:"Approved"},
-  {key:"matched", label:"Counselor matched"}, {key:"scheduled", label:"Schedule confirmed"},
-  {key:"counseling", label:"In counseling"}, {key:"transfer", label:"Transfer complete"}
+  {key:"submitted",  label:"Submitted"},
+  {key:"approved",   label:"Approved"},
+  {key:"dates",      label:"Counselor proposing dates"},
+  {key:"pick",       label:"Applicant choosing a time"},
+  {key:"confirmed",  label:"Schedule confirmed"},
+  {key:"counseling", label:"In counseling"},
+  {key:"transfer",   label:"Transfer complete"}
 ];
 const STEP_SENTENCE = [
-  "Waiting on your review and approval", "Approved — finding a counselor",
-  "Counselor matched — arranging a time", "Session time confirmed",
-  "Counseling underway", "Support fully in place"
+  "Waiting on your review and approval",
+  "Approved — assign a counselor",
+  "Counselor is proposing available times",
+  "Waiting on the applicant to pick a time",
+  "Session time confirmed",
+  "Counseling underway",
+  "Support fully in place"
 ];
 const SNAPSHOT = [
   {recId:"recFTTj06MUCkOrxB",appNo:19,first:"Zuzi",last:"Dzubakovska",email:"zuzana.dzubakovska@tckompas.sk",culture:"1st",type:"Individual",urgency:"High",appStatus:"Approved",statusText:"Counselor Confirmed Schedule",matched:true,transfer:false,submitted:"2024-11-15",yourCost:180,counselors:["JD Senkbile"],counselorIds:["recjarXzAtVuLSMgn"]},
@@ -458,15 +468,34 @@ const SNAPSHOT = [
 ];
 
 /* ---------- logic ---------- */
+const STEP_LABELS = STEPS.map(x=>x.label);   // ["Submitted", ... "Transfer complete"]
 function stepIndexFor(p){
+  // A manual Stage Override, when set, wins over the automatic calculation.
+  if(p && p.stageOverride){
+    const i = STEP_LABELS.indexOf(p.stageOverride);
+    if(i>=0) return { idx:i, denied:false, manual:true };
+  }
   const s = (p.statusText||"").toLowerCase();
-  if(s.includes("denied")||s.includes("reject")) return {idx:-1, denied:true};
+
+  // Terminal: the director rejected the application itself.
+  if(s.includes("status is rejected") || s.includes("status is denied")) return {idx:-1, denied:true};
+
+  // Steps: 0 Submitted · 1 Approved · 2 Counselor proposing dates ·
+  //        3 Applicant choosing a time · 4 Schedule confirmed ·
+  //        5 In counseling · 6 Transfer complete
   let idx = 0;
-  if(p.appStatus==="Approved" || s.includes("approved") || p.matched) idx = 1;
-  if(p.matched) idx = 2;
-  if(s.includes("confirmed schedule") || s.includes("scheduled")) idx = 3;
-  if(s.includes("session") || s.includes("counseling") || s.includes("in progress")) idx = 4;
-  if(p.transfer || s.includes("transfer") || s.includes("complete") || s.includes("closed")) idx = 5;
+  if(p.appStatus==="Approved" || s.includes("status is approved")) idx = 1;
+
+  // The Status formula reports exactly where scheduling stands:
+  if(s.includes("pending director counselor selection")) idx = 1;   // a counselor declined → back to director
+  if(s.includes("pending date selection from applicant")) idx = 3;  // counselor proposed times → applicant's turn
+  if(s.includes("applicant is waiting")) idx = 2;                   // applicant asked for new times
+  if(s.includes("rejected schedule")) idx = 2;                      // counselor bounced it, resubmitting options
+  if(s.includes("waiting for counselor confirm")) idx = 4;          // applicant picked → awaiting final confirm
+  if(s.includes("counselor confirmed schedule")) idx = 4;          // locked in
+
+  if(s.includes("in counseling") || s.includes("counseling underway")) idx = 5;
+  if(p.transfer || s.includes("transfer has been made")) idx = 6;
   return {idx, denied:false};
 }
 function resolveCounselor(p){
@@ -485,6 +514,8 @@ function mapAirtableRecord(r){
     matched: sel(f[FIELD.matched])==="Yes", transfer: !!f[FIELD.transfer],
     submitted: f[FIELD.submitted]||"", yourCost: f[FIELD.yourCost]||0,
     culture: sel(f[FIELD.culture])||"1st",
+    archived: !!f[FIELD.archived],
+    stageOverride: sel(f[FIELD.stageOverride])||"",
     counselors: Array.isArray(list) ? list.map(v=> (v&&v.name) ? v.name : v) : [],
     counselorIds: Array.isArray(list) ? list.map(v=> (v&&v.id) ? v.id : null).filter(Boolean) : []
   };
@@ -496,7 +527,7 @@ const FOCUS = {
   awaiting: {label:"people awaiting your approval", test:isAwaitingApproval},
   finding:  {label:"people approved and finding a counselor", test:p=>stepIndexFor(p).idx===1},
   matched:  {label:"people matched and arranging a time", test:p=>stepIndexFor(p).idx===2},
-  confirmed:{label:"people with a confirmed schedule", test:p=>stepIndexFor(p).idx>=3}
+  confirmed:{label:"people with a confirmed schedule", test:p=>stepIndexFor(p).idx>=4}
 };
 
 /* counselor specialties + who they see — fallback for snapshot/preview.
@@ -541,8 +572,8 @@ const GROUPS = [
 ];
 function groupKeyFor(p){
   const {idx} = stepIndexFor(p);
-  if(idx>=5) return "complete";
-  if(idx>=3) return "counseling";
+  if(idx>=6) return "complete";
+  if(idx>=4) return "counseling";
   const days = (Date.now() - new Date((p.submitted||"1970-01-01")+"T00:00:00")) / 86400000;
   return days<=14 ? "recent" : "pipeline";
 }
@@ -551,20 +582,23 @@ let DATA = [];
 let LIVE = false;
 let state = { type:"All", focus:"all" };
 let cstate = { type:null, showIdle:false };
+let showArchived = false;
 function isAwaitingApproval(p){ return p.appStatus==="Submitted"; }
 function fmtDate(iso){ if(!iso) return "—";
   return new Date(iso+"T00:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); }
 const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+function activeData(){ return DATA.filter(p=>!p.archived); }
 function renderSummary(){
-  const total = DATA.length;
+  const base = activeData();
+  const total = base.length;
   const cards = [
     {n:total, l:"People in process", focus:"all"},
     {n:DATA.filter(FOCUS.awaiting.test).length, l:"Awaiting your approval", focus:"awaiting", flag:true},
     {n:DATA.filter(FOCUS.finding.test).length, l:"Approved · finding counselor", focus:"finding"},
     {n:DATA.filter(FOCUS.matched.test).length, l:"Matched · arranging time", focus:"matched"},
-    {n:DATA.filter(FOCUS.confirmed.test).length, l:"Schedule confirmed +", focus:"confirmed"}
+    {n:base.filter(FOCUS.confirmed.test).length, l:"Schedule confirmed +", focus:"confirmed"}
   ];
   document.getElementById("summary").innerHTML = cards.map(c=>`
     <button class="stat ${c.flag?"flag":""} ${c.flag&&c.n===0?"zero":""}" data-focus="${c.focus}"
@@ -591,14 +625,20 @@ function renderLegend(){
     ${i<STEPS.length-1?'<span class="lg-arrow">→</span>':''}`).join("");
 }
 function renderControls(){
-  const types = ["All", ...Array.from(new Set(DATA.map(p=>p.type)))];
+  const src = showArchived ? DATA.filter(p=>p.archived) : activeData();
+  const types = ["All", ...Array.from(new Set(src.map(p=>p.type)))];
+  const archN = DATA.filter(p=>p.archived).length;
+  const archChip = `<button class="chip arch-toggle" id="archToggle" aria-pressed="${showArchived}">${showArchived?"\u2190 Back to active":`Archived (${archN})`}</button>`;
   document.getElementById("typeFilters").innerHTML = types.map(t=>
-    `<button class="chip" data-type="${esc(t)}" aria-pressed="${state.type===t}">${esc(t)}</button>`).join("");
+    `<button class="chip" data-type="${esc(t)}" aria-pressed="${state.type===t}">${esc(t)}</button>`).join("") + archChip;
   document.querySelectorAll("[data-type]").forEach(b=>{
     b.onclick = ()=>{ state.type=b.dataset.type;
       document.querySelectorAll("[data-type]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.type===state.type));
       renderRoster(); };
   });
+  const arch = document.getElementById("archToggle");
+  if(arch) arch.onclick = ()=>{ showArchived=!showArchived; state.type="All"; state.focus="all";
+    renderControls(); renderRoster(); };
 }
 function stepperHTML(cur){
   return `<div class="vtrack">` + STEPS.map((s,i)=>{
@@ -618,7 +658,7 @@ function counselorTag(p){
   return "";
 }
 function renderRoster(){
-  let rows = DATA.filter(FOCUS[state.focus].test);
+  let rows = (showArchived ? DATA.filter(p=>p.archived) : activeData()).filter(FOCUS[state.focus].test);
   if(state.type!=="All") rows = rows.filter(p=>p.type===state.type);
 
   const urgRank = {High:0, Medium:1, Low:2};
@@ -652,7 +692,9 @@ function renderRoster(){
         </div>
         <div class="p-status"><span class="dot"></span><span>Now: <span class="now">${sentence}</span></span></div>
         ${stepperHTML(denied?0:idx)}
+        ${stageHTML(p)}
         ${approveHTML(p)}
+        ${archiveHTML(p)}
       </div>
     </article>`;
   };
@@ -917,6 +959,81 @@ async function doApprove(box){
   }
 }
 
+/* ---------- manual stage ---------- */
+const STAGE_URL = "/.netlify/functions/set-stage";
+function stageHTML(p){
+  if(!p.recId || !LIVE) return "";
+  const cur = p.stageOverride || "";
+  const opts = ['<option value="">Automatic (follow the process)</option>']
+    .concat(STEP_LABELS.map(l=>`<option value="${esc(l)}" ${l===cur?"selected":""}>${esc(l)}</option>`))
+    .join("");
+  return `<div class="stage-row" data-app="${esc(p.recId)}">
+    <label class="stage-lab">Set stage manually</label>
+    <div class="stage-line">
+      <select class="stage-sel">${opts}</select>
+      ${cur?`<span class="stage-badge">manual</span>`:""}
+    </div>
+    <p class="stage-hint">${cur
+      ? "Showing where you placed them. Choose \u201cAutomatic\u201d to hand it back to the process."
+      : "Leave on Automatic unless they were already mid-process before this dashboard existed."}</p>
+    <span class="stage-msg" hidden></span>
+  </div>`;
+}
+async function setStage(box){
+  const applicationId = box.dataset.app;
+  const sel = box.querySelector(".stage-sel");
+  const msg = box.querySelector(".stage-msg");
+  const stage = sel.value;
+  sel.disabled = true; if(msg) msg.hidden = true;
+  try{
+    const res = await fetch(STAGE_URL, { method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ applicationId, stage }) });
+    const json = await res.json();
+    if(!res.ok || json.error) throw new Error(json.error || `Failed (${res.status})`);
+    const rec = DATA.find(p=>p.recId===applicationId); if(rec) rec.stageOverride = stage;
+    renderSummary(); renderRoster();
+  }catch(e){
+    sel.disabled=false;
+    if(msg){ msg.className="stage-msg bad"; msg.textContent=String(e.message||e); msg.hidden=false; }
+  }
+}
+
+/* ---------- archive ---------- */
+const ARCHIVE_URL = "/.netlify/functions/archive-application";
+function archiveHTML(p){
+  if(!p.recId) return "";
+  if(!LIVE) return `<div class="arch-row"><button class="arch-btn" disabled>${p.archived?"Restore":"Archive"}</button>
+     <span class="arch-hint">deploy to enable</span></div>`;
+  return p.archived
+    ? `<div class="arch-row" data-app="${esc(p.recId)}">
+         <button class="arch-btn restore">Restore to active</button>
+         <span class="arch-hint">Archived — kept for history.</span>
+         <span class="arch-msg" hidden></span></div>`
+    : `<div class="arch-row" data-app="${esc(p.recId)}">
+         <button class="arch-btn">Archive this request</button>
+         <span class="arch-hint">Hides it from the active view; keeps the full history.</span>
+         <span class="arch-msg" hidden></span></div>`;
+}
+async function doArchive(box, restore){
+  const applicationId = box.dataset.app;
+  const btn = box.querySelector(".arch-btn");
+  const msg = box.querySelector(".arch-msg");
+  if(!restore && !confirm("Archive this request? It moves out of the active view but stays in Airtable.")) return;
+  btn.dataset.busy="1"; const label=btn.textContent; btn.textContent = restore?"Restoring…":"Archiving…";
+  if(msg) msg.hidden=true;
+  try{
+    const res = await fetch(ARCHIVE_URL, { method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ applicationId, archived: !restore }) });
+    const json = await res.json();
+    if(!res.ok || json.error) throw new Error(json.error || `Failed (${res.status})`);
+    const rec = DATA.find(p=>p.recId===applicationId); if(rec) rec.archived = !restore;
+    renderSummary(); renderControls(); renderRoster();
+  }catch(e){
+    btn.dataset.busy=""; btn.textContent=label;
+    if(msg){ msg.className="arch-msg bad"; msg.textContent=String(e.message||e); msg.hidden=false; }
+  }
+}
+
 /* ---------- new application ---------- */
 const CREATE_URL = "/.netlify/functions/create-application";
 function openModal(){
@@ -1017,9 +1134,15 @@ function init(){
   document.getElementById("tab-counselors").onclick = ()=>switchView("counselors");
   document.getElementById("focusClear").onclick = ()=>setFocus("all");
   document.getElementById("nbView").onclick = viewNew;
+  document.getElementById("roster").addEventListener("change", e=>{
+    const ss = e.target.closest(".stage-sel");
+    if(ss){ setStage(ss.closest(".stage-row")); }
+  });
   document.getElementById("roster").addEventListener("click", e=>{
     const go = e.target.closest(".ap-go");
     if(go){ doApprove(go.closest(".approve")); return; }
+    const ab = e.target.closest(".arch-btn");
+    if(ab && !ab.disabled){ doArchive(ab.closest(".arch-row"), ab.classList.contains("restore")); return; }
     const gh = e.target.closest(".grp-head");
     if(gh){
       const o = gh.getAttribute("aria-expanded")==="true";

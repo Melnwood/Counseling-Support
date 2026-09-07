@@ -36,6 +36,8 @@ const APP_FIELDS = [
   "fldKD4EADERIGsoLN", // Submitted date
   "fldpH7piGlH759TxR", // Amount to withdraw from staff account
   "fldFFxDoF1wCHbUwv", // Culture (1st / 2nd)
+  "fldqEjwvlpwPodIAW", // Archived
+  "flduoyDtiNfF5dnG4", // Stage Override
   COUNSELOR_LINK_FIELD
 ];
 
