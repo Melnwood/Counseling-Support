@@ -249,8 +249,7 @@
     border:1px solid #E4BDD0;border-radius:9px;padding:8px 10px}
   .ap-sel:focus{outline:2px solid #B03A6E;border-color:#B03A6E}
   .approve .btn.go{background:#B03A6E;border-color:#B03A6E}
-  .approve .btn.go:disabled,.ap-sel:disabled{opacity:.55;cursor:not-allowed}
-  .approve .btn.go:disabled:hover{background:#B03A6E}
+  .approve .btn.go:disabled,.ap-sel:disabled{opacity:.55;cursor:not-allowed}  .approve .btn.go:disabled:hover{background:#B03A6E}
   .approve .btn.go:hover{background:#94305C}
   .ap-rate{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:#8E5573;
     line-height:1.45;margin:0 0 10px}
@@ -307,6 +306,28 @@
     .p-detail{padding:4px 15px 18px}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  .manage{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+  .manage-stage{display:flex;align-items:center;gap:9px}
+  .manage-lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+  .sel-wrap{position:relative;display:inline-block}
+  .sel-wrap::after{content:"";position:absolute;right:12px;top:50%;width:6px;height:6px;
+    border-right:1.5px solid var(--ink-soft);border-bottom:1.5px solid var(--ink-soft);
+    transform:translateY(-70%) rotate(45deg);pointer-events:none}
+  .stage-sel{appearance:none;-webkit-appearance:none;font:inherit;font-size:13px;color:var(--ink);
+    background:var(--paper);border:1px solid var(--line);border-radius:999px;
+    padding:6px 30px 6px 13px;cursor:pointer;transition:border-color .14s}
+  .stage-sel:hover{border-color:var(--pine)}
+  .stage-sel:focus-visible{outline:2px solid var(--amber);outline-offset:1px;border-color:var(--amber)}
+  .stage-sel:disabled{opacity:.55;cursor:not-allowed}
+  .manage-flag{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--amber);background:#fbf1df;border:1px solid #ecd6a8;border-radius:999px;padding:2px 8px}
+  .manage-arch{background:none;border:none;font:inherit;font-size:12.5px;color:var(--ink-soft);
+    cursor:pointer;padding:6px 2px;border-radius:6px;transition:color .14s}
+  .manage-arch:hover{color:var(--ink);text-decoration:underline}
+  .manage-arch.restore{color:var(--pine);font-weight:500}
+  .manage-arch:disabled{opacity:.5;cursor:not-allowed;text-decoration:none}
+  .manage-msg{flex-basis:100%;font-size:12px;color:var(--u-high);margin:0}
 </style>
 </head>
 <body>
@@ -692,9 +713,8 @@ function renderRoster(){
         </div>
         <div class="p-status"><span class="dot"></span><span>Now: <span class="now">${sentence}</span></span></div>
         ${stepperHTML(denied?0:idx)}
-        ${stageHTML(p)}
         ${approveHTML(p)}
-        ${archiveHTML(p)}
+        ${manageHTML(p)}
       </div>
     </article>`;
   };
@@ -959,30 +979,42 @@ async function doApprove(box){
   }
 }
 
-/* ---------- manual stage ---------- */
+/* ---------- manage: stage + archive (one quiet footer) ---------- */
 const STAGE_URL = "/.netlify/functions/set-stage";
-function stageHTML(p){
-  if(!p.recId || !LIVE) return "";
+const ARCHIVE_URL = "/.netlify/functions/archive-application";
+function manageHTML(p){
+  if(!p.recId) return "";
+  if(!LIVE){
+    return `<div class="manage">
+      <div class="manage-stage"><span class="manage-lbl">Stage</span>
+        <span class="sel-wrap"><select class="stage-sel" disabled><option>Automatic</option></select></span></div>
+      <button class="manage-arch" disabled>Archive</button>
+    </div>`;
+  }
   const cur = p.stageOverride || "";
-  const opts = ['<option value="">Automatic (follow the process)</option>']
+  const opts = ['<option value="">Automatic</option>']
     .concat(STEP_LABELS.map(l=>`<option value="${esc(l)}" ${l===cur?"selected":""}>${esc(l)}</option>`))
     .join("");
-  return `<div class="stage-row" data-app="${esc(p.recId)}">
-    <label class="stage-lab">Set stage manually</label>
-    <div class="stage-line">
-      <select class="stage-sel">${opts}</select>
-      ${cur?`<span class="stage-badge">manual</span>`:""}
+  const arch = p.archived
+    ? `<button class="manage-arch restore">Restore</button>`
+    : `<button class="manage-arch">Archive</button>`;
+  return `<div class="manage" data-app="${esc(p.recId)}">
+    <div class="manage-stage">
+      <span class="manage-lbl">Stage</span>
+      <span class="sel-wrap" title="Set where this person is. Automatic lets the process track it.">
+        <select class="stage-sel" aria-label="Set stage manually">${opts}</select>
+      </span>
+      ${cur?`<span class="manage-flag">manual</span>`:""}
     </div>
-    <p class="stage-hint">${cur
-      ? "Showing where you placed them. Choose \u201cAutomatic\u201d to hand it back to the process."
-      : "Leave on Automatic unless they were already mid-process before this dashboard existed."}</p>
-    <span class="stage-msg" hidden></span>
+    ${arch}
+    <span class="manage-msg" hidden></span>
   </div>`;
 }
+
 async function setStage(box){
   const applicationId = box.dataset.app;
   const sel = box.querySelector(".stage-sel");
-  const msg = box.querySelector(".stage-msg");
+  const msg = box.querySelector(".manage-msg");
   const stage = sel.value;
   sel.disabled = true; if(msg) msg.hidden = true;
   try{
@@ -994,30 +1026,14 @@ async function setStage(box){
     renderSummary(); renderRoster();
   }catch(e){
     sel.disabled=false;
-    if(msg){ msg.className="stage-msg bad"; msg.textContent=String(e.message||e); msg.hidden=false; }
+    if(msg){ msg.className="manage-msg"; msg.textContent=String(e.message||e); msg.hidden=false; }
   }
 }
 
-/* ---------- archive ---------- */
-const ARCHIVE_URL = "/.netlify/functions/archive-application";
-function archiveHTML(p){
-  if(!p.recId) return "";
-  if(!LIVE) return `<div class="arch-row"><button class="arch-btn" disabled>${p.archived?"Restore":"Archive"}</button>
-     <span class="arch-hint">deploy to enable</span></div>`;
-  return p.archived
-    ? `<div class="arch-row" data-app="${esc(p.recId)}">
-         <button class="arch-btn restore">Restore to active</button>
-         <span class="arch-hint">Archived — kept for history.</span>
-         <span class="arch-msg" hidden></span></div>`
-    : `<div class="arch-row" data-app="${esc(p.recId)}">
-         <button class="arch-btn">Archive this request</button>
-         <span class="arch-hint">Hides it from the active view; keeps the full history.</span>
-         <span class="arch-msg" hidden></span></div>`;
-}
 async function doArchive(box, restore){
   const applicationId = box.dataset.app;
-  const btn = box.querySelector(".arch-btn");
-  const msg = box.querySelector(".arch-msg");
+  const btn = box.querySelector(".manage-arch");
+  const msg = box.querySelector(".manage-msg");
   if(!restore && !confirm("Archive this request? It moves out of the active view but stays in Airtable.")) return;
   btn.dataset.busy="1"; const label=btn.textContent; btn.textContent = restore?"Restoring…":"Archiving…";
   if(msg) msg.hidden=true;
@@ -1030,7 +1046,7 @@ async function doArchive(box, restore){
     renderSummary(); renderControls(); renderRoster();
   }catch(e){
     btn.dataset.busy=""; btn.textContent=label;
-    if(msg){ msg.className="arch-msg bad"; msg.textContent=String(e.message||e); msg.hidden=false; }
+    if(msg){ msg.className="manage-msg"; msg.textContent=String(e.message||e); msg.hidden=false; }
   }
 }
 
@@ -1136,13 +1152,13 @@ function init(){
   document.getElementById("nbView").onclick = viewNew;
   document.getElementById("roster").addEventListener("change", e=>{
     const ss = e.target.closest(".stage-sel");
-    if(ss){ setStage(ss.closest(".stage-row")); }
+    if(ss){ setStage(ss.closest(".manage")); }
   });
   document.getElementById("roster").addEventListener("click", e=>{
     const go = e.target.closest(".ap-go");
     if(go){ doApprove(go.closest(".approve")); return; }
-    const ab = e.target.closest(".arch-btn");
-    if(ab && !ab.disabled){ doArchive(ab.closest(".arch-row"), ab.classList.contains("restore")); return; }
+    const ab = e.target.closest(".manage-arch");
+    if(ab && !ab.disabled){ doArchive(ab.closest(".manage"), ab.classList.contains("restore")); return; }
     const gh = e.target.closest(".grp-head");
     if(gh){
       const o = gh.getAttribute("aria-expanded")==="true";
