@@ -15,6 +15,11 @@ const ALLOWED   = (process.env.ALLOWED_EMAILS || "")
   .toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
 
 async function verifyRequest(event) {
+  // Netlify-password mode: if no Google client is configured, the whole site
+  // (pages AND these functions) sits behind Netlify's site password, so we
+  // trust the request here. Set GOOGLE_CLIENT_ID to switch to per-user Google auth.
+  if (!CLIENT_ID) return { ok: true, email: "(netlify-password)" };
+
   const h = event.headers || {};
   const authz = h.authorization || h.Authorization || "";
   const m = authz.match(/^Bearer\s+(.+)$/i);

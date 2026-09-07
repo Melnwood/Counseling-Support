@@ -378,7 +378,6 @@
     <p class="gate-sub">Member Care · Josiah Venture</p>
     <p class="gate-msg" id="gateMsg">Sign in with your Josiah Venture account to continue.</p>
     <div id="gbtn" class="gate-btn"></div>
-    <p class="gate-fine">Access is limited to authorized member-care staff. This page holds confidential counseling records.</p>
   </div>
 </div>
 
@@ -1309,17 +1308,34 @@ function init(){
 /* ---------- Google sign-in gate ---------- */
 function startAuth(){
   document.getElementById("gate").hidden = false;
+  const msg = document.getElementById("gateMsg");
+  if(!CONFIG.GOOGLE_CLIENT_ID){
+    msg.textContent = "Sign-in isn't set up yet — the Google Client ID is missing. See SECURITY-SETUP.md.";
+    return;
+  }
+  let tries = 0;
   const render = ()=>{
-    if(!(window.google && google.accounts && google.accounts.id)){ return setTimeout(render, 150); }
+    if(!(window.google && google.accounts && google.accounts.id)){
+      if(tries++ > 40){ msg.textContent = "Couldn't load Google sign-in. Check your connection and refresh."; return; }
+      return setTimeout(render, 150);
+    }
     google.accounts.id.initialize({
       client_id: CONFIG.GOOGLE_CLIENT_ID,
       hd: CONFIG.ALLOWED_DOMAIN,
       callback: onSignIn,
       auto_select: true
     });
-    google.accounts.id.renderButton(document.getElementById("gbtn"),
-      { theme:"filled_black", size:"large", shape:"pill", text:"signin_with" });
+    const btn = document.getElementById("gbtn");
+    btn.innerHTML = "";
+    google.accounts.id.renderButton(btn,
+      { theme:"filled_black", size:"large", shape:"pill", text:"signin_with", width:260 });
     google.accounts.id.prompt();
+    // If Google refuses to draw the button, the container stays empty — surface why.
+    setTimeout(()=>{
+      if(!btn.firstChild){
+        msg.innerHTML = "Google didn't load the sign-in button. This almost always means this site's web address hasn't been added to the Google sign-in settings yet — add it under <b>Authorized JavaScript origins</b> in Google Cloud (see SECURITY-SETUP.md).";
+      }
+    }, 2000);
   };
   render();
 }
